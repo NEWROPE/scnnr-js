@@ -1,7 +1,7 @@
 {
   "name": "scnnr-js",
   "version": "0.1.0",
-  "description": "",
+  "description": "Official #CBK scnnr client library for JavaScript",
   "main": "scnnr.js",
   "scripts": {
     "test": "mocha"
@@ -11,7 +11,7 @@
     "url": "git+https://github.com/hiroara/scnnr-js.git"
   },
   "keywords": [],
-  "author": "Arai Hiroki",
+  "author": "NEWROPE Co. Ltd.",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/hiroara/scnnr-js/issues"
