@@ -15,4 +15,3 @@ myClient.recognizeUrl("http://tokyofashion.com/wp-content/uploads/2017/10/TK-201
 .catch(error => {
     console.log(error);
 })
-
