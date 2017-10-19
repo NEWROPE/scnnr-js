@@ -15,6 +15,8 @@ describe('Connection', () => {
     const testConnection = new Connection(config);
 
     describe('sendJson', () => {
+        const testData = { data: 'dummy_data' };
+
         it('sends x-api-key', () => {
             const dummyServer = nock(config.url, { reqheaders: { 'x-api-key': config.key } }).post('/v1/').reply(200);
 
@@ -27,11 +29,16 @@ describe('Connection', () => {
             return testConnection.sendJson('/', '');
         });
 
-        it('resolves with json body', () => {
-            const testData = { data: 'dummy_data' };
-            const dummyServer = nock(config.url).post('/v1/', testData).reply(200, testData);
+        it('sends json body', () => {
+            const dummyServer = nock(config.url).post('/v1/', testData).reply(200);
             
-            return testConnection.sendJson('/', testData)
+            return testConnection.sendJson('/', testData);
+        });
+
+        it('resolves with json body', () => {
+            const dummyServer = nock(config.url).post('/v1/').reply(200, testData);
+            
+            return testConnection.sendJson('/', '')
             .then( result => {
                 result.should.eql(testData);
             });
