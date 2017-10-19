@@ -18,25 +18,25 @@ describe('Connection', () => {
         const testData = { data: 'dummy_data' };
 
         it('sends x-api-key', () => {
-            const dummyServer = nock(config.url, { reqheaders: { 'x-api-key': config.key } }).post('/v1/').reply(200);
+            nock(config.url, { reqheaders: { 'x-api-key': config.key } }).post('/v1/').reply(200);
 
             return testConnection.sendJson('/', '');
         });
 
         it('sends application/json header', () => {
-            const dummyServer = nock(config.url, { reqheaders: { 'Content-Type': 'application/json' } }).post('/v1/').reply(200);
+            nock(config.url, { reqheaders: { 'Content-Type': 'application/json' } }).post('/v1/').reply(200);
             
             return testConnection.sendJson('/', '');
         });
 
         it('sends json body', () => {
-            const dummyServer = nock(config.url).post('/v1/', testData).reply(200);
+            nock(config.url).post('/v1/', testData).reply(200);
             
             return testConnection.sendJson('/', testData);
         });
 
         it('resolves with json body', () => {
-            const dummyServer = nock(config.url).post('/v1/').reply(200, testData);
+            nock(config.url).post('/v1/').reply(200, testData);
             
             return testConnection.sendJson('/', '')
             .then( result => {
