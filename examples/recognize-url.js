@@ -7,7 +7,7 @@ const key = require('./secret-key');
 // example code
 let myClient = new scnnr.Client({ key });
 
-myClient.recognizeUrl("http://tokyofashion.com/wp-content/uploads/2017/10/TK-2017-09-09-016-001-Harajuku.jpg")
+myClient.recognizeUrl("https://res.cloudinary.com/cubki/image/upload/t_sp_standard/v1506724245/mmtzpbf8o6gc4ci57svb.jpg")
 .then(result => {
     let prettyResult = JSON.stringify(result, null, 2);
     console.log(prettyResult);
