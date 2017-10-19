@@ -3,7 +3,7 @@ const scnnr = require('../lib/scnnr');
 const chai = require('chai');
 const should = chai.should();
 
-
+/*
 describe('Client', () => {
     const config = {
         url: 'https://dummy.scnnr.cubki.jp/',
@@ -32,3 +32,4 @@ describe('Client', () => {
 
     });
 });
+*/

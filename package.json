@@ -19,7 +19,8 @@
   "homepage": "https://github.com/hiroara/scnnr-js#readme",
   "devDependencies": {
     "chai": "^4.1.2",
-    "mocha": "^4.0.1"
+    "mocha": "^4.0.1",
+    "nock": "^9.0.22"
   },
   "dependencies": {
     "axios": "^0.16.2"
