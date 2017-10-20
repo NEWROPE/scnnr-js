@@ -10,24 +10,29 @@ const should = chai.should();
 describe('Client', () => { 
     const config = {
         url: 'https://dummy.scnnr.cubki.jp/',
-        version: 'v1',
-        key: 'dummy_key',
+        version: '',
+        key: '',
     };
-
-    let testClient;
-    
-    beforeEach((done) => {
-        testClient = new scnnr.Client(config);
-        done();
-    });
+    const testClient = new scnnr.Client(config);
 
     describe('recognizeUrl', () => {
-        let dummyServer;
-        const url = 'https://example.com/dummy.jpg';
-        // dummyServer = nock('https://dummy.scnnr.cubki.jp').post('/v1/', { url }).reply(200, queuedRecognition);
+        const path = '/remote/recognitions';
 
-        it('should send url in post body');
-        it('should resolve with queued recognition')
+        it('should send url in post body', () => {
+            const url = 'https://example.com/dummy.jpg';
+            nock(config.url).post(path, { url }).reply(200);
+
+            return testClient.recognizeUrl(url);
+        });
+
+        it('should resolve with queued recognition', () => {
+            nock(config.url).post(path).reply(200, queuedRecognition);
+
+            return testClient.recognizeUrl('')
+            .then(result => {
+                result.should.be.eql(queuedRecognition);
+            });
+        });
     });
 
 });
