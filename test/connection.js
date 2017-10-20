@@ -35,7 +35,7 @@ describe('Connection', () => {
             const timeoutConfig = Object.assign({}, config, timeout);
             const timeoutConnection = new Connection(timeoutConfig);
 
-            nock(config.url).post(versionPath).query( timeout ).reply(200);
+            nock(config.url).post(versionPath).query(timeout).reply(200);
 
             return timeoutConnection.sendJson('/', '');
         });
