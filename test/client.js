@@ -1,6 +1,6 @@
 "use strict";
 const chai = require('chai');
-const nock = require('nock')
+const nock = require('nock');
 
 const scnnr = require('../lib/scnnr');
 const queuedRecognition = require('./fixtures/queued_recognition');
