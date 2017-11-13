@@ -20,3 +20,4 @@ export default class Client {
 
   }
 }
+Client.Connection = Connection

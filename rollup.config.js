@@ -15,6 +15,16 @@ const plugins = [
   json(),
   commonjs(), // so Rollup can convert `ms` to an ES module
   babel({
+    babelrc: false,
+    presets: [
+      [
+        "env",
+        {
+          "modules": false
+        },
+      ],
+    ],
+    externalHelpers: true,
     exclude: 'node_modules/**'
   }),
 ]

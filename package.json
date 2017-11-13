@@ -8,7 +8,7 @@
   "scripts": {
     "start": "rollup -c -w",
     "build": "rollup -c",
-    "test": "mocha"
+    "test": "mocha --require babel-core/register test/**/*.js --watch"
   },
   "repository": "git+https://github.com/hiroara/scnnr-js.git",
   "keywords": [],
@@ -23,6 +23,7 @@
     "babel-core": "^6.26.0",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.6.1",
+    "babel-register": "^6.26.0",
     "chai": "^4.1.2",
     "cross-env": "^5.1.1",
     "eslint": "^4.11.0",
