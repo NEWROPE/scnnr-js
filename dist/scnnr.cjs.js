@@ -11,9 +11,29 @@ var defaults = {
   key: ''
 };
 
-var _createClass$1 = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
 
-function _classCallCheck$1(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+}();
 
 var Connection = function () {
   function Connection(_ref) {
@@ -21,8 +41,7 @@ var Connection = function () {
         version = _ref.version,
         key = _ref.key,
         timeout = _ref.timeout;
-
-    _classCallCheck$1(this, Connection);
+    classCallCheck(this, Connection);
 
     this.axiosInstance = axios.create();
 
@@ -35,7 +54,7 @@ var Connection = function () {
     }
   }
 
-  _createClass$1(Connection, [{
+  createClass(Connection, [{
     key: 'sendJson',
     value: function sendJson(path, data) {
       var _this = this;
@@ -49,46 +68,48 @@ var Connection = function () {
       });
     }
   }]);
-
   return Connection;
 }();
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 var Client = function () {
   function Client(config) {
-    _classCallCheck(this, Client);
+    classCallCheck(this, Client);
 
     this.config = Object.assign({}, defaults, config);
 
     this.connection = new Connection(this.config);
   }
 
-  _createClass(Client, [{
+  // TODO: remove eslint-disable-line
+
+
+  createClass(Client, [{
     key: 'recognizeUrl',
     value: function recognizeUrl(url) {
       return this.connection.sendJson('/remote/recognitions', { url: url });
     }
+
+    // TODO: remove eslint-disable-line
+
   }, {
     key: 'recognizeImg',
     value: function recognizeImg(imageFile) {
       
-    }
+    } // eslint-disable-line no-unused-vars
+
+    // TODO: remove eslint-disable-line
+
   }, {
     key: 'fetch',
-    value: function fetch(id) {
+    value: function fetch(id) {// eslint-disable-line no-unused-vars
+
       
     }
   }]);
-
   return Client;
 }();
 
 Client.Connection = Connection;
-
-function _classCallCheck$2(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Recognition = function Recognition(_ref) {
   var id = _ref.id,
@@ -97,8 +118,7 @@ var Recognition = function Recognition(_ref) {
       state = _ref.state,
       _ref$error = _ref.error,
       error = _ref$error === undefined ? {} : _ref$error;
-
-  _classCallCheck$2(this, Recognition);
+  classCallCheck(this, Recognition);
 
   this.id = id;
   this.objects = objects;

@@ -1,0 +1,28 @@
+env:
+  browser: true
+  commonjs: true
+  es6: true
+globals:
+  process: true
+extends: 'eslint:recommended'
+parser: babel-eslint
+parserOptions:
+  ecmaFeatures:
+    experimentalObjectRestSpread: true
+  sourceType: module
+plugins:
+  - mocha
+rules:
+  indent:
+    - error
+    - 2
+  linebreak-style:
+    - error
+    - unix
+  quotes:
+    - error
+    - single
+  semi:
+    - error
+    - never
+  space-infix-ops: error

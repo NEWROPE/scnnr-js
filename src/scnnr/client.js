@@ -8,15 +8,18 @@ export default class Client {
     this.connection = new Connection(this.config)
   }
 
-  recognizeUrl(url, options = {}) {
+  // TODO: remove eslint-disable-line
+  recognizeUrl(url, options = {}) { // eslint-disable-line no-unused-vars
     return this.connection.sendJson('/remote/recognitions', { url })
   }
 
-  recognizeImg(imageFile, options = {}) {
+  // TODO: remove eslint-disable-line
+  recognizeImg(imageFile, options = {}) { // eslint-disable-line no-unused-vars
 
   }
 
-  fetch(id, options = {}) {
+  // TODO: remove eslint-disable-line
+  fetch(id, options = {}) { // eslint-disable-line no-unused-vars
 
   }
 }

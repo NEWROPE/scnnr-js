@@ -18,13 +18,13 @@ const plugins = [
     babelrc: false,
     presets: [
       [
-        "env",
+        'env',
         {
-          "modules": false
+          'modules': false
         },
       ],
     ],
-    externalHelpers: true,
+    plugins: ['external-helpers'],
     exclude: 'node_modules/**'
   }),
 ]
