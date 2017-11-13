@@ -1,8 +1,7 @@
-'use strict'
-const defaults = require('./client/defaults')
-const Connection = require('./client/connection')
+import defaults from './client/defaults'
+import Connection from './client/connection'
 
-class Client {
+export default class Client {
   constructor(config) {
     this.config = Object.assign({}, defaults, config)
 
@@ -14,12 +13,10 @@ class Client {
   }
 
   recognizeImg(imageFile, options = {}) {
-        
+
   }
 
   fetch(id, options = {}) {
 
   }
 }
-
-module.exports = Client

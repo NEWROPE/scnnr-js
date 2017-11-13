@@ -1,8 +1,6 @@
-'use strict'
+import axios from 'axios/dist/axios'
 
-const axios = require('axios')
-
-class Connection {
+export default class Connection {
   constructor({ url, version, key, timeout }) {
     this.axiosInstance = axios.create()
 
@@ -16,16 +14,14 @@ class Connection {
   }
 
   sendJson(path, data) {
-    return new Promise( (resolve, reject) => { 
+    return new Promise( (resolve, reject) => {
       this.axiosInstance.post(path, data, { headers: { 'Content-Type': 'application/json' } })
         .then( response => {
           resolve(response.data)
         })
-        .catch ( error => { 
+        .catch ( error => {
           reject({} || error.response.error)
         })
     })
   }
 }
-
-module.exports = Connection
