@@ -1,12 +1,7 @@
-import chai from 'chai'
 import nock from 'nock'
 
 import Scnnr from '../dist/scnnr.esm'
 import queuedRecognition from './fixtures/queued_recognition.json'
-
-import axios from 'axios'
-
-const should = chai.should()
 
 describe('Client', () => {
   const config = {

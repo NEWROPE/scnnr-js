@@ -3,7 +3,8 @@ env:
   commonjs: true
   es6: true
 globals:
-  process: true
+  describe: true
+  it: true
 extends: 'eslint:recommended'
 parser: babel-eslint
 parserOptions:
@@ -26,3 +27,19 @@ rules:
     - error
     - never
   space-infix-ops: error
+  mocha/handle-done-callback:
+    - error
+  mocha/no-exclusive-tests:
+    - error
+  mocha/no-global-tests:
+    - error
+  mocha/no-identical-title:
+    - warn
+  mocha/no-nested-tests:
+    - error
+  mocha/no-pending-tests:
+    - warn
+  mocha/no-sibling-hooks:
+    - warn
+  mocha/no-top-level-hooks:
+    - warn

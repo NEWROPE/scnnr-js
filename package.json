@@ -7,9 +7,9 @@
   "browser": "dist/scnnr.umd.js",
   "scripts": {
     "start": "rollup -c -w",
-    "build": "yarn lint && rollup -c && mocha --require babel-core/register test/**/*.js",
-    "test": "mocha --require babel-core/register test/**/*.js --watch",
-    "lint": "eslint src/**/*.js"
+    "build": "yarn lint && rollup -c && mocha --require babel-core/register test/setup.js test/**/*.js",
+    "test": "mocha --require babel-core/register test/setup.js test/**/*.js --watch",
+    "lint": "eslint src/**/*.js test/**/*.js"
   },
   "repository": "git+https://github.com/hiroara/scnnr-js.git",
   "keywords": [],
@@ -29,6 +29,7 @@
     "chai": "^4.1.2",
     "cross-env": "^5.1.1",
     "eslint": "^4.11.0",
+    "eslint-plugin-mocha": "^4.11.0",
     "mocha": "^4.0.1",
     "nock": "^9.0.22",
     "rollup": "^0.51.5",

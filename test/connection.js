@@ -1,9 +1,7 @@
-import chai from 'chai'
 import nock from 'nock'
 
 import Scnnr from '../dist/scnnr.esm'
 
-const should = chai.should()
 const Connection = Scnnr.Client.Connection
 
 describe('Connection', () => {
