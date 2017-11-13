@@ -1,4 +1,4 @@
-import axios from 'axios/dist/axios'
+import axios from 'axios'
 
 export default class Connection {
   constructor({ url, version, key, timeout }) {

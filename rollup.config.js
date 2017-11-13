@@ -55,7 +55,7 @@ var config = [
   // `file` and `format` for each target)
   {
     input: 'src/main.js',
-    external: ['ms'],
+    external: ['axios'],
     output: [
       { file: pkg.main, format: 'cjs' },
       { file: pkg.module, format: 'es' }
