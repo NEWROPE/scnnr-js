@@ -1,15 +1,16 @@
 {
   "name": "scnnr-js",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Official #CBK scnnr client library for JavaScript",
-  "main": "scnnr.js",
+  "main": "dist/scnnr.cjs.js",
+  "module": "dist/scnnr.esm.js",
+  "browser": "dist/scnnr.umd.js",
   "scripts": {
+    "start": "rollup -c -w",
+    "build": "rollup -c",
     "test": "mocha"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hiroara/scnnr-js.git"
-  },
+  "repository": "git+https://github.com/hiroara/scnnr-js.git",
   "keywords": [],
   "author": "NEWROPE Co. Ltd.",
   "license": "MIT",
@@ -18,10 +19,20 @@
   },
   "homepage": "https://github.com/hiroara/scnnr-js#readme",
   "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
     "chai": "^4.1.2",
-    "eslint": "^4.9.0",
+    "cross-env": "^5.1.1",
+    "eslint": "^4.11.0",
     "mocha": "^4.0.1",
-    "nock": "^9.0.22"
+    "nock": "^9.0.22",
+    "rollup": "^0.51.5",
+    "rollup-plugin-babel": "^3.0.2",
+    "rollup-plugin-commonjs": "^8.2.6",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-replace": "^2.0.0",
+    "rollup-plugin-uglify": "^2.0.1"
   },
   "dependencies": {
     "axios": "^0.16.2"
