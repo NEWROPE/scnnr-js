@@ -8,8 +8,7 @@ import scnnr from '../dist/scnnr.esm'
 
 describe('Connection', () => {
   const config = {
-    url: 'https://dummy.scnnr.cubki.jp/',
-    version: 'v1',
+    url: 'https://dummy.scnnr.cubki.jp/v1',
     apiKey: 'dummy_key'
   }
   const connection = new scnnr.Connection(config)
@@ -17,7 +16,7 @@ describe('Connection', () => {
 
   const behavesLikeGenericRequest = (method, requestPath, contentType, sendRequest) => {
     it('sends Content-Type header', () => {
-      nock(config.url, { reqheaders: { 'Content-Type': contentType } })[method](`/${config.version}${requestPath}`)
+      nock(config.url, { reqheaders: { 'Content-Type': contentType } })[method](requestPath)
         .reply(200)
 
       return sendRequest
@@ -29,7 +28,7 @@ describe('Connection', () => {
       const timeout = { timeout: 1 }
       const timeoutConnection = new scnnr.Connection(Object.assign({}, config, timeout))
 
-      nock(config.url)[method](`/${config.version}/${requestPath}`).query(timeout).reply(200)
+      nock(config.url)[method](requestPath).query(timeout).reply(200)
 
       return sendRequest
     })
@@ -38,7 +37,7 @@ describe('Connection', () => {
   const behavesLikePOSTRequest = (requestPath, sendRequest) => {
     it('sends x-api-key', () => {
       nock(config.url, { reqheaders: { 'x-api-key': config.apiKey } })
-        .post(`/${config.version}/${requestPath}`)
+        .post(requestPath)
         .reply(200)
       return sendRequest
     })
@@ -54,13 +53,13 @@ describe('Connection', () => {
     behavesLikePOSTRequest(requestPath, sendRequest)
 
     it('sends json body', () => {
-      nock(config.url).post(`/${config.version}${requestPath}`, requestBody).reply(200)
+      nock(config.url).post(requestPath, requestBody).reply(200)
 
       return sendRequest()
     })
 
     it('resolves with response', () => {
-      nock(config.url).post(`/${config.version}${requestPath}`).reply(200, responseBody)
+      nock(config.url).post(requestPath).reply(200, responseBody)
 
       return sendRequest()
         .then(result => {
@@ -81,37 +80,20 @@ describe('Connection', () => {
 
     it('sends binary-data', () => {
       nock(config.url, { reqheaders: { 'Content-Type': 'application/octet-stream' } })
-        .post(`/${config.version}${requestPath}`)
+        .post(requestPath)
         .reply(200, (uri, body) => { expect(body).to.equal(requestBody.toString('hex')) })
 
       return sendRequest()
     })
 
     it('resolves with response', () => {
-      nock(config.url).post(`/${config.version}${requestPath}`).reply(200, responseBody)
+      nock(config.url).post(requestPath).reply(200, responseBody)
 
       return sendRequest()
         .then(result => {
           expect(result.status).to.equal(200)
           expect(result.data).to.deep.equal(responseBody)
         })
-    })
-  })
-
-  describe('hasKey', () => {
-    it('is set false when apiKey is not string', () => {
-      const connection = new scnnr.Connection({ apiKey: null })
-      expect(connection.hasKey).to.be.false
-    })
-
-    it('is set true when apiKey is empty string', () => {
-      const connection = new scnnr.Connection({ apiKey: '  ' })
-      expect(connection.hasKey).to.be.false
-    })
-
-    it('is set true when apiKey is non-empty string', () => {
-      const connection = new scnnr.Connection({ apiKey: 'some-key' })
-      expect(connection.hasKey).to.be.true
     })
   })
 })

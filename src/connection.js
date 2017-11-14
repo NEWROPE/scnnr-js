@@ -1,23 +1,13 @@
 import axios from 'axios'
 
-function isPresent(str) {
-  return typeof str === 'string' && str.replace(/^\s*/, '').replace(/\s*$/, '') !== ''
-}
-
 export default class Connection {
-  constructor({ url, version, apiKey, timeout }) {
+  constructor({ url, apiKey, params }) {
     this.httpClient = axios.create()
-    this.httpClient.defaults.baseURL = url + version
+    this.httpClient.defaults.baseURL = url
 
-    this.hasKey = isPresent(apiKey)
-    if (this.hasKey) {
-      this.httpClient.defaults.headers.post['x-api-key'] = apiKey
-    }
+    if (apiKey) { this.httpClient.defaults.headers['x-api-key'] = apiKey }
 
-    if (timeout > 0) {
-      this.httpClient.defaults.params = {} // create default params
-      this.httpClient.defaults.params['timeout'] = timeout
-    }
+    this.httpClient.defaults.params = params
   }
 
   sendJson(path, data) { return this.send(path, data, 'application/json') }
