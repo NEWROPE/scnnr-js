@@ -11,6 +11,7 @@ export default class Client {
   // TODO: remove eslint-disable-line
   recognizeUrl(url, options = {}) { // eslint-disable-line no-unused-vars
     return this.connection.sendJson('/remote/recognitions', { url })
+      .then(this.handleResponse)
   }
 
   // TODO: remove eslint-disable-line
@@ -22,5 +23,7 @@ export default class Client {
   fetch(id, options = {}) { // eslint-disable-line no-unused-vars
 
   }
+
+  handleResponse(response) { return response.data }
 }
 Client.Connection = Connection
