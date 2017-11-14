@@ -10,7 +10,7 @@ describe('Connection', () => {
     version: 'v1',
     key: 'dummy_key'
   }
-  const testConnection = new Connection(config)
+  const connection = new Connection(config)
   const versionPath = `/${config.version}/`
 
   describe('sendJson', () => {
@@ -19,13 +19,13 @@ describe('Connection', () => {
     it('sends x-api-key', () => {
       nock(config.url, { reqheaders: { 'x-api-key': config.key } }).post(versionPath).reply(200)
 
-      return testConnection.sendJson('/', '')
+      return connection.sendJson('/', '')
     })
 
     it('sends application/json header', () => {
       nock(config.url, { reqheaders: { 'Content-Type': 'application/json' } }).post(versionPath).reply(200)
 
-      return testConnection.sendJson('/', '')
+      return connection.sendJson('/', '')
     })
 
     it('sends timeout parameter', () => {
@@ -41,17 +41,16 @@ describe('Connection', () => {
     it('sends json body', () => {
       nock(config.url).post(versionPath, testData).reply(200)
 
-      return testConnection.sendJson('/', testData)
+      return connection.sendJson('/', testData)
     })
 
     it('resolves with json body', () => {
       nock(config.url).post(versionPath).reply(200, testData)
 
-      return testConnection.sendJson('/', '')
-        .then( result => {
+      return connection.sendJson('/', '')
+        .then(result => {
           result.should.eql(testData)
         })
     })
   })
-
 })

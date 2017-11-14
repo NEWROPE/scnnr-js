@@ -7,19 +7,19 @@ export default class Connection {
     this.axiosInstance.defaults.baseURL = url + version
     this.axiosInstance.defaults.headers.post['x-api-key'] = key
 
-    if(timeout > 0) {
+    if (timeout > 0) {
       this.axiosInstance.defaults.params = {} // create default params
       this.axiosInstance.defaults.params['timeout'] = timeout
     }
   }
 
   sendJson(path, data) {
-    return new Promise( (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.axiosInstance.post(path, data, { headers: { 'Content-Type': 'application/json' } })
-        .then( response => {
+        .then(response => {
           resolve(response.data)
         })
-        .catch ( error => {
+        .catch(error => {
           reject({} || error.response.error)
         })
     })
