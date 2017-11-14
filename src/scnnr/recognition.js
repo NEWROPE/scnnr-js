@@ -1,6 +1,4 @@
-'use strict'
-
-class Recognition {
+export default class Recognition {
   constructor({ id, objects = {}, state, error = {} }) {
     this.id = id
     this.objects = objects
@@ -8,5 +6,3 @@ class Recognition {
     this.error = error
   }
 }
-
-module.exports = Recognition

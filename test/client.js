@@ -1,20 +1,15 @@
-'use strict'
+import nock from 'nock'
 
-const chai = require('chai')
-const nock = require('nock')
+import Scnnr from '../dist/scnnr.esm'
+import queuedRecognition from './fixtures/queued_recognition.json'
 
-const scnnr = require('../lib/scnnr')
-const queuedRecognition = require('./fixtures/queued_recognition')
-
-const should = chai.should()
-
-describe('Client', () => { 
+describe('Client', () => {
   const config = {
     url: 'https://dummy.scnnr.cubki.jp/',
     version: '',
     key: '',
   }
-  const testClient = new scnnr.Client(config)
+  const client = new Scnnr.Client(config)
 
   describe('recognizeUrl', () => {
     const path = '/remote/recognitions'
@@ -23,13 +18,13 @@ describe('Client', () => {
       const url = 'https://example.com/dummy.jpg'
       nock(config.url).post(path, { url }).reply(200)
 
-      return testClient.recognizeUrl(url)
+      return client.recognizeUrl(url)
     })
 
     it('should resolve with queued recognition', () => {
       nock(config.url).post(path).reply(200, queuedRecognition)
 
-      return testClient.recognizeUrl('')
+      return client.recognizeUrl('')
         .then(result => {
           result.should.be.eql(queuedRecognition)
         })

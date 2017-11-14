@@ -1,13 +1,10 @@
-'use strict'
+import nock from 'nock'
 
-const chai = require('chai')
-const nock = require('nock')
+import Scnnr from '../dist/scnnr.esm'
 
-const Connection = require('../lib/scnnr/client/connection')
+const Connection = Scnnr.Client.Connection
 
-const should = chai.should()
-
-describe('Connection', () => { 
+describe('Connection', () => {
   const config = {
     url: 'https://dummy.scnnr.cubki.jp/',
     version: 'v1',
@@ -27,7 +24,7 @@ describe('Connection', () => {
 
     it('sends application/json header', () => {
       nock(config.url, { reqheaders: { 'Content-Type': 'application/json' } }).post(versionPath).reply(200)
-            
+
       return testConnection.sendJson('/', '')
     })
 
@@ -43,13 +40,13 @@ describe('Connection', () => {
 
     it('sends json body', () => {
       nock(config.url).post(versionPath, testData).reply(200)
-            
+
       return testConnection.sendJson('/', testData)
     })
 
     it('resolves with json body', () => {
       nock(config.url).post(versionPath).reply(200, testData)
-            
+
       return testConnection.sendJson('/', '')
         .then( result => {
           result.should.eql(testData)
