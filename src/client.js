@@ -28,9 +28,10 @@ export default class Client {
       .then(this.handleResponse)
   }
 
-  // TODO: remove eslint-disable-line
-  fetch(id, options = {}) { // eslint-disable-line no-unused-vars
-
+  fetch(id, options = {}) {
+    return this.connection(false, options)
+      .get(`/recognitions/${id}`)
+      .then(this.handleResponse)
   }
 
   handleResponse(response) { return new Recognition(response.data) }

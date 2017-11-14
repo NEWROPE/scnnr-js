@@ -10,6 +10,10 @@ export default class Connection {
     this.httpClient.defaults.params = params
   }
 
+  get(path) {
+    return this.httpClient.get(path, null, { headers: { 'Content-Type': 'application/json' } })
+  }
+
   sendJson(path, data) { return this.send(path, data, 'application/json') }
 
   sendBinary(path, data) { return this.send(path, data, 'application/octet-stream') }

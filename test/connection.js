@@ -21,6 +21,16 @@ describe('Connection', () => {
 
       return sendRequest
     })
+
+    it('resolves with response', () => {
+      nock(config.url)[method](requestPath).reply(200, responseBody)
+
+      return sendRequest()
+        .then(result => {
+          expect(result.status).to.equal(200)
+          expect(result.data).to.deep.equal(responseBody)
+        })
+    })
   }
 
   const behavesLikeTimeoutableRequest = (method, requestPath, sendRequest) => {
@@ -43,6 +53,14 @@ describe('Connection', () => {
     })
   }
 
+  describe('get', () => {
+    const requestPath = '/recognitions/some/recognition-id'
+    const sendRequest = (options = {}) => connection.get(requestPath, {}, options)
+
+    behavesLikeGenericRequest('get', requestPath, 'application/json', sendRequest)
+    behavesLikeTimeoutableRequest('get', requestPath, sendRequest)
+  })
+
   describe('sendJson', () => {
     const requestPath = '/remote/recognitions'
     const requestBody = { data: 'dummy_data' }
@@ -56,16 +74,6 @@ describe('Connection', () => {
       nock(config.url).post(requestPath, requestBody).reply(200)
 
       return sendRequest()
-    })
-
-    it('resolves with response', () => {
-      nock(config.url).post(requestPath).reply(200, responseBody)
-
-      return sendRequest()
-        .then(result => {
-          expect(result.status).to.equal(200)
-          expect(result.data).to.deep.equal(responseBody)
-        })
     })
   })
 
@@ -84,16 +92,6 @@ describe('Connection', () => {
         .reply(200, (uri, body) => { expect(body).to.equal(requestBody.toString('hex')) })
 
       return sendRequest()
-    })
-
-    it('resolves with response', () => {
-      nock(config.url).post(requestPath).reply(200, responseBody)
-
-      return sendRequest()
-        .then(result => {
-          expect(result.status).to.equal(200)
-          expect(result.data).to.deep.equal(responseBody)
-        })
     })
   })
 })
