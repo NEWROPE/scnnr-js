@@ -13,7 +13,7 @@ describe('Connection', () => {
   const config = {
     url: 'https://dummy.scnnr.cubki.jp/',
     version: 'v1',
-    key: 'dummy_key'
+    apiKey: 'dummy_key'
   }
   const connection = new Connection(config)
   const responseBody = { data: 'dummy_data' }
@@ -30,7 +30,7 @@ describe('Connection', () => {
   const behavesLikeTimeoutableRequest = (method, requestPath, sendRequest) => {
     it('sends timeout parameter', () => {
       const timeout = { timeout: 1 }
-      const timeoutConnection = new Connection({ ...config, ...timeout })
+      const timeoutConnection = new Connection(Object.assign({}, config, timeout))
 
       nock(config.url)[method](`/${config.version}/${requestPath}`).query(timeout).reply(200)
 
@@ -40,7 +40,7 @@ describe('Connection', () => {
 
   const behavesLikePOSTRequest = (requestPath, sendRequest) => {
     it('sends x-api-key', () => {
-      nock(config.url, { reqheaders: { 'x-api-key': config.key } }).post(`/${config.version}/${requestPath}`).reply(200)
+      nock(config.url, { reqheaders: { 'x-api-key': config.apiKey } }).post(`/${config.version}/${requestPath}`).reply(200)
       return sendRequest
     })
   }
@@ -96,6 +96,23 @@ describe('Connection', () => {
           expect(result.status).to.equal(200)
           expect(result.data).to.deep.equal(responseBody)
         })
+    })
+  })
+
+  describe('hasKey', () => {
+    it('is set false when apiKey is not string', () => {
+      const connection = new Connection({ apiKey: null })
+      expect(connection.hasKey).to.be.false
+    })
+
+    it('is set true when apiKey is empty string', () => {
+      const connection = new Connection({ apiKey: "  " })
+      expect(connection.hasKey).to.be.false
+    })
+
+    it('is set true when apiKey is non-empty string', () => {
+      const connection = new Connection({ apiKey: "some-key" })
+      expect(connection.hasKey).to.be.true
     })
   })
 })

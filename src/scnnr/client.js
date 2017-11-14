@@ -4,13 +4,11 @@ import Connection from './client/connection'
 export default class Client {
   constructor(config) {
     this.config = Object.assign({}, defaults, config)
-
-    this.connection = new Connection(this.config)
   }
 
   // TODO: remove eslint-disable-line
   recognizeUrl(url, options = {}) { // eslint-disable-line no-unused-vars
-    return this.connection.sendJson('/remote/recognitions', { url })
+    return this.connection(options).sendJson('/remote/recognitions', { url })
       .then(this.handleResponse)
   }
 
@@ -25,5 +23,7 @@ export default class Client {
   }
 
   handleResponse(response) { return response.data }
+
+  connection(options) { return new Connection(Object.assign({}, this.config, options)) }
 }
 Client.Connection = Connection

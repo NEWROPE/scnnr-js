@@ -6,8 +6,7 @@ import queuedRecognition from './fixtures/queued_recognition.json'
 describe('Client', () => {
   const config = {
     url: 'https://dummy.scnnr.cubki.jp/',
-    version: '',
-    key: '',
+    apiKey: 'dummy-key',
   }
   const client = new Scnnr.Client(config)
 
@@ -16,13 +15,13 @@ describe('Client', () => {
 
     it('should send url in post body', () => {
       const url = 'https://example.com/dummy.jpg'
-      nock(config.url).post(path, { url }).reply(200)
+      nock(config.url).post(`/${client.config.version}${path}`, { url }).reply(200)
 
       return client.recognizeUrl(url)
     })
 
     it('should resolve with queued recognition', () => {
-      nock(config.url).post(path).reply(200, queuedRecognition)
+      nock(config.url).post(`/${client.config.version}${path}`).reply(200, queuedRecognition)
 
       return client.recognizeUrl('')
         .then(result => {
