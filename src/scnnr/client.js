@@ -11,9 +11,9 @@ export default class Client {
       .then(this.handleResponse)
   }
 
-  // TODO: remove eslint-disable-line
-  recognizeImg(imageFile, options = {}) { // eslint-disable-line no-unused-vars
-
+  recognizeImage(data, options = {}) {
+    return this.connection(options).sendBinary('/recognitions', data)
+      .then(this.handleResponse)
   }
 
   // TODO: remove eslint-disable-line

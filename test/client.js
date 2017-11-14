@@ -1,4 +1,7 @@
 import nock from 'nock'
+import fs from 'fs'
+import path from 'path'
+import { expect } from 'chai'
 
 import Scnnr from '../dist/scnnr.esm'
 import queuedRecognition from './fixtures/queued_recognition.json'
@@ -11,23 +14,40 @@ describe('Client', () => {
   const client = new Scnnr.Client(config)
 
   describe('recognizeUrl', () => {
-    const path = '/remote/recognitions'
+    const requestPath = '/remote/recognitions'
+    const url = 'https://example.com/dummy.jpg'
 
     it('should send url in post body', () => {
-      const url = 'https://example.com/dummy.jpg'
-      nock(config.url).post(`/${client.config.version}${path}`, { url }).reply(200)
+      nock(config.url).post(`/${client.config.version}${requestPath}`, { url }).reply(200)
 
       return client.recognizeUrl(url)
     })
 
     it('should resolve with queued recognition', () => {
-      nock(config.url).post(`/${client.config.version}${path}`).reply(200, queuedRecognition)
+      nock(config.url).post(`/${client.config.version}${requestPath}`).reply(200, queuedRecognition)
 
-      return client.recognizeUrl('')
-        .then(result => {
-          result.should.be.eql(queuedRecognition)
-        })
+      return client.recognizeUrl(url)
+        .then(result => { result.should.be.eql(queuedRecognition) })
     })
   })
 
+  describe('recognizeImage', () => {
+    const requestPath = '/recognitions'
+    const data = fs.readFileSync(path.join(__dirname, './fixtures/images/sample.png'))
+
+    it('should send binary data in post body', () => {
+      nock(config.url).post(`/${client.config.version}${requestPath}`).reply(200, (url, body) => {
+        expect(body).to.equal(data.toString('hex'))
+      })
+
+      return client.recognizeImage(data)
+    })
+
+    it('should resolve with queued recognition', () => {
+      nock(config.url).post(`/${client.config.version}${requestPath}`).reply(200, queuedRecognition)
+
+      return client.recognizeImage(data)
+        .then(result => { result.should.be.eql(queuedRecognition) }) // TODO: use Recognition class
+    })
+  })
 })
