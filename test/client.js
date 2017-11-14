@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { expect } from 'chai'
 
-import Scnnr from '../dist/scnnr.esm'
+import scnnr from '../dist/scnnr.esm'
 import queuedRecognition from './fixtures/queued_recognition.json'
 
 describe('Client', () => {
@@ -11,7 +11,7 @@ describe('Client', () => {
     url: 'https://dummy.scnnr.cubki.jp/',
     apiKey: 'dummy-key',
   }
-  const client = new Scnnr.Client(config)
+  const client = scnnr.client(config)
 
   describe('recognizeUrl', () => {
     const requestPath = '/remote/recognitions'

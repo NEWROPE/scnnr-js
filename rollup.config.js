@@ -31,7 +31,7 @@ const plugins = [
 var config = [
   // browser-friendly UMD build
   {
-    input: 'src/main.js',
+    input: 'src/index.js',
     output: {
       file: pkg.browser,
       format: 'umd'
@@ -54,7 +54,7 @@ var config = [
   // an array for the `output` option, where we can specify
   // `file` and `format` for each target)
   {
-    input: 'src/main.js',
+    input: 'src/index.js',
     external: ['axios'],
     output: [
       { file: pkg.main, format: 'cjs' },

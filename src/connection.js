@@ -6,12 +6,13 @@ function isPresent(str) {
 
 export default class Connection {
   constructor({ url, version, apiKey, timeout }) {
-    this.hasKey = isPresent(apiKey)
-
     this.httpClient = axios.create()
-
     this.httpClient.defaults.baseURL = url + version
-    this.httpClient.defaults.headers.post['x-api-key'] = apiKey
+
+    this.hasKey = isPresent(apiKey)
+    if (this.hasKey) {
+      this.httpClient.defaults.headers.post['x-api-key'] = apiKey
+    }
 
     if (timeout > 0) {
       this.httpClient.defaults.params = {} // create default params

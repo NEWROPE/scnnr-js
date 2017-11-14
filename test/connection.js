@@ -4,12 +4,11 @@ import path from 'path'
 import { Buffer } from 'buffer'
 import { expect } from 'chai'
 
-import Scnnr from '../dist/scnnr.esm'
+import scnnr from '../dist/scnnr.esm'
 
-const Connection = Scnnr.Client.Connection
+const Connection = scnnr.Connection
 
 describe('Connection', () => {
-  beforeEach(() => { nock.cleanAll() })
   const config = {
     url: 'https://dummy.scnnr.cubki.jp/',
     version: 'v1',

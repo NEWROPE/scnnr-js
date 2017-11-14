@@ -60,7 +60,6 @@
     "mocha/no-identical-title": ["warn"],
     "mocha/no-nested-tests": ["error"],
     "mocha/no-pending-tests": ["warn"],
-    "mocha/no-sibling-hooks": ["warn"],
-    "mocha/no-top-level-hooks": ["warn"]
+    "mocha/no-sibling-hooks": ["warn"]
   }
 }

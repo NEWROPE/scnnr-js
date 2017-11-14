@@ -1,5 +1,5 @@
 import defaults from './client/defaults'
-import Connection from './client/connection'
+import Connection from './connection'
 
 export default class Client {
   constructor(config) {
@@ -25,4 +25,3 @@ export default class Client {
 
   connection(options) { return new Connection(Object.assign({}, this.config, options)) }
 }
-Client.Connection = Connection
