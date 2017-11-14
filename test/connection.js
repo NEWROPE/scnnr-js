@@ -20,7 +20,8 @@ describe('Connection', () => {
 
   const behavesLikeGenericRequest = (method, requestPath, contentType, sendRequest) => {
     it('sends Content-Type header', () => {
-      nock(config.url, { reqheaders: { 'Content-Type': contentType } })[method](`/${config.version}${requestPath}`).reply(200)
+      nock(config.url, { reqheaders: { 'Content-Type': contentType } })[method](`/${config.version}${requestPath}`)
+        .reply(200)
 
       return sendRequest
     })
@@ -80,9 +81,9 @@ describe('Connection', () => {
     behavesLikePOSTRequest(requestPath, sendRequest)
 
     it('sends binary-data', () => {
-      nock(config.url, { reqheaders: { 'Content-Type': 'application/octet-stream' } }).post(`/${config.version}${requestPath}`).reply(200, (uri, body) => {
-        expect(body).to.equal(requestBody.toString('hex'))
-      })
+      nock(config.url, { reqheaders: { 'Content-Type': 'application/octet-stream' } })
+        .post(`/${config.version}${requestPath}`)
+        .reply(200, (uri, body) => { expect(body).to.equal(requestBody.toString('hex')) })
 
       return sendRequest()
     })
