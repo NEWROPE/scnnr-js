@@ -40,7 +40,9 @@ describe('Connection', () => {
 
   const behavesLikePOSTRequest = (requestPath, sendRequest) => {
     it('sends x-api-key', () => {
-      nock(config.url, { reqheaders: { 'x-api-key': config.apiKey } }).post(`/${config.version}/${requestPath}`).reply(200)
+      nock(config.url, { reqheaders: { 'x-api-key': config.apiKey } })
+        .post(`/${config.version}/${requestPath}`)
+        .reply(200)
       return sendRequest
     })
   }
@@ -106,12 +108,12 @@ describe('Connection', () => {
     })
 
     it('is set true when apiKey is empty string', () => {
-      const connection = new Connection({ apiKey: "  " })
+      const connection = new Connection({ apiKey: '  ' })
       expect(connection.hasKey).to.be.false
     })
 
     it('is set true when apiKey is non-empty string', () => {
-      const connection = new Connection({ apiKey: "some-key" })
+      const connection = new Connection({ apiKey: 'some-key' })
       expect(connection.hasKey).to.be.true
     })
   })

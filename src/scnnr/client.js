@@ -6,8 +6,7 @@ export default class Client {
     this.config = Object.assign({}, defaults, config)
   }
 
-  // TODO: remove eslint-disable-line
-  recognizeUrl(url, options = {}) { // eslint-disable-line no-unused-vars
+  recognizeUrl(url, options = {}) {
     return this.connection(options).sendJson('/remote/recognitions', { url })
       .then(this.handleResponse)
   }
