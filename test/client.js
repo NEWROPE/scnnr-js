@@ -31,6 +31,10 @@ describe('Client', () => {
           expect(recognition).to.deep.equal(new scnnr.Recognition(queuedRecognition))
         })
     })
+
+    it('needs apiKey', () => {
+      expect(() => client.recognizeUrl(url, { apiKey: null })).to.throw('`apiKey` configuration is required.')
+    })
   })
 
   describe('recognizeImage', () => {
@@ -49,9 +53,13 @@ describe('Client', () => {
       nock(config.url).post(`/${client.config.version}${requestPath}`).reply(200, queuedRecognition)
 
       return client.recognizeImage(data)
-        .then(result => {
-          expect(result).to.deep.equal(new scnnr.Recognition(queuedRecognition))
+        .then(recognition => {
+          expect(recognition).to.deep.equal(new scnnr.Recognition(queuedRecognition))
         })
+    })
+
+    it('needs apiKey', () => {
+      expect(() => client.recognizeImage(data, { apiKey: null })).to.throw('`apiKey` configuration is required.')
     })
   })
 })

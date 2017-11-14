@@ -1,6 +1,7 @@
 import defaults from './client/defaults'
 import Connection from './Connection'
 import Recognition from './Recognition'
+import { PreconditionFailed } from './errors'
 
 function sanitizeAPIKey(key) {
   if (typeof key !== 'string') {
@@ -38,14 +39,17 @@ export default class Client {
     return new Connection(this.connectionConfig(useAPIKey, options))
   }
 
-  connectionConfig(options, apiKey = undefined) {
+  connectionConfig(useAPIKey, options) {
     const config = Object.assign({}, this.config, options)
+    const apiKey = sanitizeAPIKey(config.apiKey)
+    if (useAPIKey && apiKey == null) {
+      throw new PreconditionFailed('`apiKey` configuration is required.')
+    }
     const params = {}
     if ((config.timeout || 0) > 0) { params.timeout = config.timeout }
     return {
+      apiKey, params,
       url: config.url + config.version,
-      apiKey: sanitizeAPIKey(config.apiKey),
-      params,
     }
   }
 }
