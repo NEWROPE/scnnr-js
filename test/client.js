@@ -13,59 +13,63 @@ describe('Client', () => {
   }
   const client = scnnr(config)
 
-  describe('recognizeUrl', () => {
-    const requestPath = '/remote/recognitions'
-    const url = 'https://example.com/dummy.jpg'
-
-    it('should send url in post body', () => {
-      nock(config.url).post(`/${client.config.version}${requestPath}`, { url }).reply(200)
-
-      return client.recognizeUrl(url)
-    })
-
+  const behavesLikeRequestToGetRecognition = (method, requestPath, needsAPIKey, sendRequest) => {
     it('should resolve with queued recognition', () => {
-      nock(config.url).post(`/${client.config.version}${requestPath}`).reply(200, queuedRecognition)
+      nock(config.url)[method](`/${client.config.version}${requestPath}`).reply(200, queuedRecognition)
 
-      return client.recognizeUrl(url)
+      return sendRequest()
         .then(recognition => {
           expect(recognition).to.deep.equal(new scnnr.Recognition(queuedRecognition))
         })
     })
 
-    it('needs apiKey', () => {
-      expect(() => client.recognizeUrl(url, { apiKey: null })).to.throw('`apiKey` configuration is required.')
+    if (needsAPIKey) {
+      it('needs apiKey', () => {
+        expect(() => sendRequest({ apiKey: null })).to.throw('`apiKey` configuration is required.')
+      })
+    } else {
+      it('does not need apiKey', () => {
+        nock(config.url)[method](`/${client.config.version}${requestPath}`).reply(200)
+        expect(() => sendRequest({ apiKey: null })).not.to.throw()
+      })
+    }
+  }
+
+  describe('recognizeUrl', () => {
+    const requestPath = '/remote/recognitions'
+    const url = 'https://example.com/dummy.jpg'
+
+    const sendRequest = (options = {}) => client.recognizeUrl(url, options)
+
+    it('should send url in post body', () => {
+      nock(config.url).post(`/${client.config.version}${requestPath}`, { url }).reply(200)
+
+      return sendRequest()
     })
+
+    behavesLikeRequestToGetRecognition('post', requestPath, true, sendRequest)
   })
 
   describe('recognizeImage', () => {
     const requestPath = '/recognitions'
     const data = fs.readFileSync(path.join(__dirname, './fixtures/images/sample.png'))
+    const sendRequest = (options = {}) => client.recognizeImage(data, options)
 
     it('should send binary data in post body', () => {
       nock(config.url).post(`/${client.config.version}${requestPath}`).reply(200, (url, body) => {
         expect(body).to.equal(data.toString('hex'))
       })
 
-      return client.recognizeImage(data)
+      return sendRequest()
     })
 
-    it('should resolve with queued recognition', () => {
-      nock(config.url).post(`/${client.config.version}${requestPath}`).reply(200, queuedRecognition)
-
-      return client.recognizeImage(data)
-        .then(recognition => {
-          expect(recognition).to.deep.equal(new scnnr.Recognition(queuedRecognition))
-        })
-    })
-
-    it('needs apiKey', () => {
-      expect(() => client.recognizeImage(data, { apiKey: null })).to.throw('`apiKey` configuration is required.')
-    })
+    behavesLikeRequestToGetRecognition('post', requestPath, true, sendRequest)
   })
 
   describe('fetch', () => {
     const recognitionId = 'some/recognition-id'
     const requestPath = `/recognitions/${recognitionId}`
+    const sendRequest = (options = {}) => client.fetch(recognitionId, options)
 
     it('should get a result from API', () => {
       nock(config.url).get(`/${client.config.version}${requestPath}`).reply(200)
@@ -73,17 +77,6 @@ describe('Client', () => {
       return client.fetch(recognitionId)
     })
 
-    it('should resolve with queued recognition', () => {
-      nock(config.url).get(`/${client.config.version}${requestPath}`).reply(200, queuedRecognition)
-
-      return client.fetch(recognitionId)
-        .then(recognition => {
-          expect(recognition).to.deep.equal(new scnnr.Recognition(queuedRecognition))
-        })
-    })
-
-    it('does not need apiKey', () => {
-      expect(() => client.fetch(recognitionId, { apiKey: null })).not.to.throw()
-    })
+    behavesLikeRequestToGetRecognition('get', requestPath, false, sendRequest)
   })
 })
