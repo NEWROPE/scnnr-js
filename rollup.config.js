@@ -7,13 +7,12 @@ import eslint from 'rollup-plugin-eslint'
 
 import pkg from './package.json'
 
-const env = process.env.NODE_ENV
 const plugins = [
   resolve({
     browser: true,
-  }), // so Rollup can find `ms`
+  }),
   json(),
-  commonjs(), // so Rollup can convert `ms` to an ES module
+  commonjs(),
   babel({
     babelrc: false,
     presets: [

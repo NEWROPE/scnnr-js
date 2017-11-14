@@ -11,7 +11,7 @@ describe('Client', () => {
     url: 'https://dummy.scnnr.cubki.jp/',
     apiKey: 'dummy-key',
   }
-  const client = scnnr.client(config)
+  const client = scnnr(config)
 
   describe('recognizeUrl', () => {
     const requestPath = '/remote/recognitions'
@@ -27,7 +27,9 @@ describe('Client', () => {
       nock(config.url).post(`/${client.config.version}${requestPath}`).reply(200, queuedRecognition)
 
       return client.recognizeUrl(url)
-        .then(result => { result.should.be.eql(queuedRecognition) })
+        .then(recognition => {
+          expect(recognition).to.deep.equal(new scnnr.Recognition(queuedRecognition))
+        })
     })
   })
 
@@ -47,7 +49,9 @@ describe('Client', () => {
       nock(config.url).post(`/${client.config.version}${requestPath}`).reply(200, queuedRecognition)
 
       return client.recognizeImage(data)
-        .then(result => { result.should.be.eql(queuedRecognition) }) // TODO: use Recognition class
+        .then(result => {
+          expect(result).to.deep.equal(new scnnr.Recognition(queuedRecognition))
+        })
     })
   })
 })

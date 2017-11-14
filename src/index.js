@@ -1,12 +1,11 @@
-import Client from './client'
+import Client from './Client'
 import Connection from './Connection'
-import Recognition from './recognition'
+import Recognition from './Recognition'
 
-function client(config) { return new Client(config) }
+function client(options) { return new Client(options) }
 
-export default {
-  client,
+export default Object.assign(client, {
   Client,
   Connection,
-  Recognition
-}
+  Recognition,
+})

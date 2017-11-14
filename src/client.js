@@ -1,5 +1,6 @@
 import defaults from './client/defaults'
-import Connection from './connection'
+import Connection from './Connection'
+import Recognition from './Recognition'
 
 export default class Client {
   constructor(config) {
@@ -21,7 +22,7 @@ export default class Client {
 
   }
 
-  handleResponse(response) { return response.data }
+  handleResponse(response) { return new Recognition(response.data) }
 
   connection(options) { return new Connection(Object.assign({}, this.config, options)) }
 }

@@ -6,15 +6,13 @@ import { expect } from 'chai'
 
 import scnnr from '../dist/scnnr.esm'
 
-const Connection = scnnr.Connection
-
 describe('Connection', () => {
   const config = {
     url: 'https://dummy.scnnr.cubki.jp/',
     version: 'v1',
     apiKey: 'dummy_key'
   }
-  const connection = new Connection(config)
+  const connection = new scnnr.Connection(config)
   const responseBody = { data: 'dummy_data' }
 
   const behavesLikeGenericRequest = (method, requestPath, contentType, sendRequest) => {
@@ -29,7 +27,7 @@ describe('Connection', () => {
   const behavesLikeTimeoutableRequest = (method, requestPath, sendRequest) => {
     it('sends timeout parameter', () => {
       const timeout = { timeout: 1 }
-      const timeoutConnection = new Connection(Object.assign({}, config, timeout))
+      const timeoutConnection = new scnnr.Connection(Object.assign({}, config, timeout))
 
       nock(config.url)[method](`/${config.version}/${requestPath}`).query(timeout).reply(200)
 
@@ -49,7 +47,7 @@ describe('Connection', () => {
   describe('sendJson', () => {
     const requestPath = '/remote/recognitions'
     const requestBody = { data: 'dummy_data' }
-    const sendRequest = () => connection.sendJson(requestPath, requestBody)
+    const sendRequest = (options = {}) => connection.sendJson(requestPath, requestBody, options)
 
     behavesLikeGenericRequest('post', requestPath, 'application/json', sendRequest)
     behavesLikeTimeoutableRequest('post', requestPath, sendRequest)
@@ -102,17 +100,17 @@ describe('Connection', () => {
 
   describe('hasKey', () => {
     it('is set false when apiKey is not string', () => {
-      const connection = new Connection({ apiKey: null })
+      const connection = new scnnr.Connection({ apiKey: null })
       expect(connection.hasKey).to.be.false
     })
 
     it('is set true when apiKey is empty string', () => {
-      const connection = new Connection({ apiKey: '  ' })
+      const connection = new scnnr.Connection({ apiKey: '  ' })
       expect(connection.hasKey).to.be.false
     })
 
     it('is set true when apiKey is non-empty string', () => {
-      const connection = new Connection({ apiKey: 'some-key' })
+      const connection = new scnnr.Connection({ apiKey: 'some-key' })
       expect(connection.hasKey).to.be.true
     })
   })
