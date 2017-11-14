@@ -6,6 +6,14 @@
     "mocha": true
   },
   "extends": "eslint:recommended",
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true
+    },
+    "sourceType": "module"
+  },
+  "plugins": ["mocha"],
   "rules": {
     "indent": [
       "error",
@@ -29,6 +37,15 @@
       "global"
     ],
     "curly": "warn",
-    "no-unused-vars": 0
+    "no-unused-vars": 0,
+    "space-infix-ops": ["error"],
+    "mocha/handle-done-callback": ["error"],
+    "mocha/no-exclusive-tests": ["error"],
+    "mocha/no-global-tests": ["error"],
+    "mocha/no-identical-title": ["warn"],
+    "mocha/no-nested-tests": ["error"],
+    "mocha/no-pending-tests": ["warn"],
+    "mocha/no-sibling-hooks": ["warn"],
+    "mocha/no-top-level-hooks": ["warn"]
   }
 }
