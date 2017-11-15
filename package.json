@@ -8,7 +8,7 @@
   "scripts": {
     "start": "rollup -c -w",
     "build": "yarn lint && rollup -c && yarn test",
-    "test": "mocha --require babel-core/register test/setup.js test/**/*.js",
+    "test": "mocha --require babel-core/register test/setup.js 'test/**/*.js'",
     "test:watch": "yarn test -- --watch",
     "lint": "eslint 'src/**/*.js' 'test/**/*.js'",
     "lint:watch": "chokidar 'src/**/*.js' 'test/**/*.js' -c 'yarn lint && echo \"\\033[0;32mReadable codes!\\033[0;0m\"'"

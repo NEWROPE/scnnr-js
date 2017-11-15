@@ -6,9 +6,24 @@ export declare namespace Scnnr {
     fetch(id: string, options?: Options): Promise<Recognition>
   }
   interface Error {}
+  interface Label {
+    name: string
+    score: number
+  }
+  interface BoundingBox {
+    top: number
+    right: number
+    bottom: number
+    left: number
+  }
+  interface Item {
+    category: string
+    labels: Array<Label>
+    boundingBox: BoundingBox
+  }
   interface Recognition {
     id: string
-    objects: Array<{}>
+    objects: Array<Item>
     state: string
     error?: Error
   }

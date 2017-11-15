@@ -114,6 +114,14 @@ var Connection = function () {
   return Connection;
 }();
 
+var Item = function Item(props) {
+  classCallCheck(this, Item);
+
+  this.category = props.category;
+  this.boundingBox = props.boundingBox || props.bounding_box;
+  this.labels = props.labels;
+};
+
 var Recognition = function Recognition(_ref) {
   var id = _ref.id,
       objects = _ref.objects,
@@ -122,10 +130,14 @@ var Recognition = function Recognition(_ref) {
   classCallCheck(this, Recognition);
 
   this.id = id;
-  this.objects = objects || [];
+  this.objects = (objects || []).map(function (obj) {
+    return new Item(obj);
+  });
   this.state = state;
   this.error = error;
 };
+
+Recognition.Item = Item;
 
 var PreconditionFailed = function (_Error) {
   inherits(PreconditionFailed, _Error);
