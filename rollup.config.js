@@ -7,6 +7,8 @@ import eslint from 'rollup-plugin-eslint'
 
 import pkg from './package.json'
 
+const input = 'src/index.js'
+
 const plugins = [
   resolve({
     browser: true,
@@ -30,12 +32,12 @@ const plugins = [
 var config = [
   // browser-friendly UMD build
   {
-    input: 'src/index.js',
+    input: input,
     output: {
       file: pkg.main,
       format: 'umd'
     },
-    name: 'Scnnr',
+    name: pkg.name,
     plugins: plugins.concat([
       uglify({
         compress: {
@@ -53,13 +55,13 @@ var config = [
   // an array for the `output` option, where we can specify
   // `file` and `format` for each target)
   {
-    input: 'src/index.js',
+    input: input,
     external: ['axios'],
     output: [
       { file: pkg.module.replace('.esm', '.cjs'), format: 'cjs' },
       { file: pkg.module, format: 'es' }
     ],
-    name: 'Scnnr',
+    name: pkg.name,
     plugins: plugins.concat([
       eslint({
         exclude: 'src/**',
