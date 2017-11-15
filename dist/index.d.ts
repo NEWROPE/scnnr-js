@@ -28,5 +28,8 @@ export declare namespace Scnnr {
     error?: Error
   }
 }
-declare function scnnr(options?: Scnnr.Options): Scnnr.Client
+declare var scnnr: {
+  (options?: Scnnr.Options): Scnnr.Client
+  Recognition: new (props: Scnnr.Recognition) => Scnnr.Recognition
+}
 export default scnnr
