@@ -32,7 +32,7 @@ var config = [
   {
     input: 'src/index.js',
     output: {
-      file: pkg.browser,
+      file: pkg.main,
       format: 'umd'
     },
     name: 'Scnnr',
@@ -56,7 +56,7 @@ var config = [
     input: 'src/index.js',
     external: ['axios'],
     output: [
-      { file: pkg.main, format: 'cjs' },
+      { file: pkg.module.replace('.esm', '.cjs'), format: 'cjs' },
       { file: pkg.module, format: 'es' }
     ],
     name: 'Scnnr',
