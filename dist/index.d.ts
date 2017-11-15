@@ -5,7 +5,13 @@ export declare namespace Scnnr {
     recognizeImage(url: ArrayBuffer, options?: Options): Promise<Recognition>
     fetch(id: string, options?: Options): Promise<Recognition>
   }
-  interface Recognition {}
+  interface Error {}
+  interface Recognition {
+    id: string
+    objects: Array<{}>
+    state: string
+    error?: Error
+  }
 }
 declare function scnnr(options?: Scnnr.Options): Scnnr.Client
 export default scnnr
