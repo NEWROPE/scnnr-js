@@ -31,13 +31,28 @@
       "error",
       "never"
     ],
-    "no-console": "off",
+    "no-console": ["warn"],
+    "comma-dangle": ["error", {
+      "arrays": "only-multiline",
+      "objects": "only-multiline",
+      "imports": "only-multiline",
+      "exports": "only-multiline",
+      "functions": "never"
+    }],
     "strict": [
       "error",
       "global"
     ],
+    "max-len": ["error", 120],
     "curly": "warn",
+    "object-curly-spacing": ["error", "always"],
+    "dot-location": ["error", "property"],
+    "func-call-spacing": ["error", "never"],
     "no-unused-vars": 0,
+    "space-in-parens": ["error", "never"],
+    "keyword-spacing": ["error", { "before": true }],
+    "space-before-function-paren": ["error", "never"],
+    "space-before-blocks": ["error", "always"],
     "space-infix-ops": ["error"],
     "mocha/handle-done-callback": ["error"],
     "mocha/no-exclusive-tests": ["error"],
@@ -45,7 +60,6 @@
     "mocha/no-identical-title": ["warn"],
     "mocha/no-nested-tests": ["error"],
     "mocha/no-pending-tests": ["warn"],
-    "mocha/no-sibling-hooks": ["warn"],
-    "mocha/no-top-level-hooks": ["warn"]
+    "mocha/no-sibling-hooks": ["warn"]
   }
 }

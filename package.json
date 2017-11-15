@@ -7,9 +7,11 @@
   "browser": "dist/scnnr.umd.js",
   "scripts": {
     "start": "rollup -c -w",
-    "build": "yarn lint && rollup -c && mocha --require babel-core/register test/setup.js test/**/*.js",
-    "test": "mocha --require babel-core/register test/setup.js test/**/*.js --watch",
-    "lint": "eslint src/**/*.js test/**/*.js"
+    "build": "yarn lint && rollup -c && yarn test",
+    "test": "mocha --require babel-core/register test/setup.js test/**/*.js",
+    "test:watch": "yarn test -- --watch",
+    "lint": "eslint 'src/**/*.js' 'test/**/*.js'",
+    "lint:watch": "chokidar 'src/**/*.js' 'test/**/*.js' -c 'yarn lint && echo \"\\033[0;32mReadable codes!\\033[0;0m\"'"
   },
   "repository": "git+https://github.com/hiroara/scnnr-js.git",
   "keywords": [],
@@ -27,6 +29,7 @@
     "babel-preset-env": "^1.6.1",
     "babel-register": "^6.26.0",
     "chai": "^4.1.2",
+    "chokidar-cli": "^1.2.0",
     "cross-env": "^5.1.1",
     "eslint": "^4.11.0",
     "eslint-plugin-mocha": "^4.11.0",

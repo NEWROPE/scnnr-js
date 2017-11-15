@@ -1,7 +1,7 @@
 export default class Recognition {
-  constructor({ id, objects = {}, state, error = {} }) {
+  constructor({ id, objects, state, error }) {
     this.id = id
-    this.objects = objects
+    this.objects = objects || []
     this.state = state
     this.error = error
   }

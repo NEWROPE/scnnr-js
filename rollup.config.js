@@ -7,13 +7,12 @@ import eslint from 'rollup-plugin-eslint'
 
 import pkg from './package.json'
 
-const env = process.env.NODE_ENV
 const plugins = [
   resolve({
     browser: true,
-  }), // so Rollup can find `ms`
+  }),
   json(),
-  commonjs(), // so Rollup can convert `ms` to an ES module
+  commonjs(),
   babel({
     babelrc: false,
     presets: [
@@ -31,7 +30,7 @@ const plugins = [
 var config = [
   // browser-friendly UMD build
   {
-    input: 'src/main.js',
+    input: 'src/index.js',
     output: {
       file: pkg.browser,
       format: 'umd'
@@ -54,7 +53,7 @@ var config = [
   // an array for the `output` option, where we can specify
   // `file` and `format` for each target)
   {
-    input: 'src/main.js',
+    input: 'src/index.js',
     external: ['axios'],
     output: [
       { file: pkg.main, format: 'cjs' },
