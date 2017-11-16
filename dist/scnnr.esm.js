@@ -93,7 +93,7 @@ var Connection = function () {
   createClass(Connection, [{
     key: 'get',
     value: function get$$1(path) {
-      return this.httpClient.get(path, null, { headers: { 'Content-Type': 'application/json' } });
+      return this.httpClient.get(path, null);
     }
   }, {
     key: 'sendJson',
