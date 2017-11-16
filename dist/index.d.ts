@@ -2,7 +2,7 @@ export declare namespace Scnnr {
   interface Options {}
   interface Client {
     recognizeUrl(url: string, options?: Options): Promise<Recognition>
-    recognizeImage(url: ArrayBuffer, options?: Options): Promise<Recognition>
+    recognizeImage(data: ArrayBuffer, options?: Options): Promise<Recognition>
     fetch(id: string, options?: Options): Promise<Recognition>
   }
   interface Error {}
