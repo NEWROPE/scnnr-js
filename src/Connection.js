@@ -11,7 +11,7 @@ export default class Connection {
   }
 
   get(path) {
-    return this.httpClient.get(path, null, { headers: { 'Content-Type': 'application/json' } })
+    return this.httpClient.get(path, null)
   }
 
   sendJson(path, data) { return this.send(path, data, 'application/json') }

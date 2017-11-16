@@ -14,18 +14,11 @@ describe('Connection', () => {
   const connection = new scnnr.Connection(config)
   const responseBody = { data: 'dummy_data' }
 
-  const behavesLikeGenericRequest = (method, requestPath, contentType, sendRequest) => {
-    it('sends Content-Type header', () => {
-      nock(config.url, { reqheaders: { 'Content-Type': contentType } })[method](requestPath)
-        .reply(200)
-
-      return sendRequest
-    })
-
+  const behavesLikeGenericRequest = (method, requestPath, sendRequest) => {
     it('resolves with response', () => {
       nock(config.url)[method](requestPath).reply(200, responseBody)
 
-      return sendRequest()
+      return sendRequest(connection)
         .then(result => {
           expect(result.status).to.equal(200)
           expect(result.data).to.deep.equal(responseBody)
@@ -33,14 +26,23 @@ describe('Connection', () => {
     })
   }
 
+  const behavesLikeRequestWithBody = (method, requestPath, contentType, sendRequest) => {
+    it('sends Content-Type header', () => {
+      nock(config.url, { reqheaders: { 'Content-Type': contentType } })[method](requestPath)
+        .reply(200)
+
+      return sendRequest(connection)
+    })
+  }
+
   const behavesLikeTimeoutableRequest = (method, requestPath, sendRequest) => {
     it('sends timeout parameter', () => {
-      const timeout = { timeout: 1 }
+      const timeout = { params: { timeout: 1 } }
       const timeoutConnection = new scnnr.Connection(Object.assign({}, config, timeout))
 
-      nock(config.url)[method](requestPath).query(timeout).reply(200)
+      nock(config.url)[method](requestPath).query(timeout.params).reply(200)
 
-      return sendRequest
+      return sendRequest(timeoutConnection)
     })
   }
 
@@ -49,40 +51,42 @@ describe('Connection', () => {
       nock(config.url, { reqheaders: { 'x-api-key': config.apiKey } })
         .post(requestPath)
         .reply(200)
-      return sendRequest
+      return sendRequest(connection)
     })
   }
 
   describe('get', () => {
     const requestPath = '/recognitions/some/recognition-id'
-    const sendRequest = (options = {}) => connection.get(requestPath, {}, options)
+    const sendRequest = (connection, options = {}) => connection.get(requestPath, {}, options)
 
-    behavesLikeGenericRequest('get', requestPath, 'application/json', sendRequest)
+    behavesLikeGenericRequest('get', requestPath, sendRequest)
     behavesLikeTimeoutableRequest('get', requestPath, sendRequest)
   })
 
   describe('sendJson', () => {
     const requestPath = '/remote/recognitions'
     const requestBody = { data: 'dummy_data' }
-    const sendRequest = (options = {}) => connection.sendJson(requestPath, requestBody, options)
+    const sendRequest = (connection, options = {}) => connection.sendJson(requestPath, requestBody, options)
 
-    behavesLikeGenericRequest('post', requestPath, 'application/json', sendRequest)
+    behavesLikeGenericRequest('post', requestPath, sendRequest)
+    behavesLikeRequestWithBody('post', requestPath, 'application/json', sendRequest)
     behavesLikeTimeoutableRequest('post', requestPath, sendRequest)
     behavesLikePOSTRequest(requestPath, sendRequest)
 
     it('sends json body', () => {
       nock(config.url).post(requestPath, requestBody).reply(200)
 
-      return sendRequest()
+      return sendRequest(connection)
     })
   })
 
   describe('sendBinary', () => {
     const requestPath = '/recognitions'
     const requestBody = fs.readFileSync(path.join(__dirname, './fixtures/images/sample.png'))
-    const sendRequest = () => connection.sendBinary(requestPath, requestBody)
+    const sendRequest = (connection, options = {}) => connection.sendBinary(requestPath, requestBody, options)
 
-    behavesLikeGenericRequest('post', requestPath, 'application/octet-stream', sendRequest)
+    behavesLikeGenericRequest('post', requestPath, sendRequest)
+    behavesLikeRequestWithBody('post', requestPath, 'application/octet-stream', sendRequest)
     behavesLikeTimeoutableRequest('post', requestPath, sendRequest)
     behavesLikePOSTRequest(requestPath, sendRequest)
 
@@ -91,7 +95,7 @@ describe('Connection', () => {
         .post(requestPath)
         .reply(200, (uri, body) => { expect(body).to.equal(requestBody.toString('hex')) })
 
-      return sendRequest()
+      return sendRequest(connection)
     })
   })
 })
