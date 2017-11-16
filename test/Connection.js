@@ -38,7 +38,6 @@ describe('Connection', () => {
   const behavesLikeTimeoutableRequest = (method, requestPath, sendRequest) => {
     it('sends timeout parameter', () => {
       const timeout = { params: { timeout: 1 } }
-      console.log(Object.assign({}, config, timeout))
       const timeoutConnection = new scnnr.Connection(Object.assign({}, config, timeout))
 
       nock(config.url)[method](requestPath).query(timeout.params).reply(200)
