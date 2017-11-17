@@ -3,20 +3,21 @@ import fs from 'fs'
 import path from 'path'
 import { Buffer } from 'buffer'
 import { expect } from 'chai'
+import XHRMock from 'xhr-mock'
 
 import scnnr from '../dist/scnnr.esm'
 
 describe('Connection', () => {
   const config = {
     url: 'https://dummy.scnnr.cubki.jp/v1',
-    apiKey: 'dummy_key'
+    apiKey: 'dummy_key',
   }
   const connection = new scnnr.Connection(config)
   const responseBody = { data: 'dummy_data' }
 
   const behavesLikeGenericRequest = (method, requestPath, sendRequest) => {
     it('resolves with response', () => {
-      nock(config.url)[method](requestPath).reply(200, responseBody)
+      nock(config.url, { reqheaders: { 'x-api-key': config.apiKey } })[method](requestPath).reply(200, responseBody)
 
       return sendRequest(connection)
         .then(result => {
@@ -46,12 +47,36 @@ describe('Connection', () => {
     })
   }
 
-  const behavesLikePOSTRequest = (requestPath, sendRequest) => {
+  const behavesLikeRequestWithAPIKey = (requestPath, sendRequest) => {
     it('sends x-api-key', () => {
       nock(config.url, { reqheaders: { 'x-api-key': config.apiKey } })
         .post(requestPath)
         .reply(200)
       return sendRequest(connection)
+    })
+  }
+
+  const behavesLikeRequestWithProgress = (type, method, requestPath, sendRequest) => {
+    describe('on a browser environment', () => {
+      let onProgress
+      const onProgressPromise = new Promise((resolve) => { onProgress = event => resolve(event) })
+
+      const connection = new scnnr.Connection(Object.assign({
+        [`on${type}Progress`]: onProgress,
+      }, config))
+      connection.httpClient.defaults.adapter = require('axios/lib/adapters/xhr')
+
+      beforeEach(() => {
+        XHRMock.setup()
+        XHRMock[method](config.url + requestPath, (req, res) => res.status(200).body(responseBody))
+      })
+      afterEach(() => { XHRMock.teardown() })
+
+      it(`can be work with on${type}Progress callback`, () => {
+        return sendRequest(connection)
+          .then(() => onProgressPromise)
+          .then((event) => expect(event.type).to.equal('progress'))
+      })
     })
   }
 
@@ -61,6 +86,7 @@ describe('Connection', () => {
 
     behavesLikeGenericRequest('get', requestPath, sendRequest)
     behavesLikeTimeoutableRequest('get', requestPath, sendRequest)
+    behavesLikeRequestWithProgress('Download', 'get', requestPath, sendRequest)
   })
 
   describe('sendJson', () => {
@@ -71,7 +97,9 @@ describe('Connection', () => {
     behavesLikeGenericRequest('post', requestPath, sendRequest)
     behavesLikeRequestWithBody('post', requestPath, 'application/json', sendRequest)
     behavesLikeTimeoutableRequest('post', requestPath, sendRequest)
-    behavesLikePOSTRequest(requestPath, sendRequest)
+    behavesLikeRequestWithAPIKey(requestPath, sendRequest)
+    behavesLikeRequestWithProgress('Download', 'post', requestPath, sendRequest)
+    behavesLikeRequestWithProgress('Upload', 'post', requestPath, sendRequest)
 
     it('sends json body', () => {
       nock(config.url).post(requestPath, requestBody).reply(200)
@@ -88,7 +116,9 @@ describe('Connection', () => {
     behavesLikeGenericRequest('post', requestPath, sendRequest)
     behavesLikeRequestWithBody('post', requestPath, 'application/octet-stream', sendRequest)
     behavesLikeTimeoutableRequest('post', requestPath, sendRequest)
-    behavesLikePOSTRequest(requestPath, sendRequest)
+    behavesLikeRequestWithAPIKey(requestPath, sendRequest)
+    behavesLikeRequestWithProgress('Download', 'post', requestPath, sendRequest)
+    behavesLikeRequestWithProgress('Upload', 'post', requestPath, sendRequest)
 
     it('sends binary-data', () => {
       nock(config.url, { reqheaders: { 'Content-Type': 'application/octet-stream' } })

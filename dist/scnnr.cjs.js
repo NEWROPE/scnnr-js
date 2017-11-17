@@ -81,17 +81,22 @@ var Connection = function () {
   function Connection(_ref) {
     var url = _ref.url,
         apiKey = _ref.apiKey,
-        params = _ref.params;
+        params = _ref.params,
+        onUploadProgress = _ref.onUploadProgress,
+        onDownloadProgress = _ref.onDownloadProgress;
     classCallCheck(this, Connection);
 
-    this.httpClient = axios.create();
-    this.httpClient.defaults.baseURL = url;
-
+    var headers = {};
     if (apiKey) {
-      this.httpClient.defaults.headers['x-api-key'] = apiKey;
+      headers['x-api-key'] = apiKey;
     }
 
-    this.httpClient.defaults.params = params;
+    this.httpClient = axios.create({
+      params: params, headers: headers,
+      baseURL: url,
+      onUploadProgress: onUploadProgress,
+      onDownloadProgress: onDownloadProgress
+    });
   }
 
   createClass(Connection, [{
@@ -229,7 +234,9 @@ var Client = function () {
       }
       return {
         apiKey: apiKey, params: params,
-        url: config.url + config.version
+        url: config.url + config.version,
+        onUploadProgress: config.onUploadProgress,
+        onDownloadProgress: config.onDownloadProgress
       };
     }
   }]);

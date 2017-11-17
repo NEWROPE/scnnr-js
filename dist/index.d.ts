@@ -1,5 +1,12 @@
 export declare namespace Scnnr {
-  interface Options {}
+  interface Options {
+    url?: string
+    version?: string
+    timeout?: number
+    apiKey?: string
+    onDownloadProgress?: (event: ProgressEvent) => void
+    onUploadProgress?: (event: ProgressEvent) => void
+  }
   interface Client {
     recognizeUrl(url: string, options?: Options): Promise<Recognition>
     recognizeImage(data: ArrayBuffer, options?: Options): Promise<Recognition>

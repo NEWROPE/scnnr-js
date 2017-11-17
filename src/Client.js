@@ -51,6 +51,8 @@ export default class Client {
     return {
       apiKey, params,
       url: config.url + config.version,
+      onUploadProgress: config.onUploadProgress,
+      onDownloadProgress: config.onDownloadProgress,
     }
   }
 }
