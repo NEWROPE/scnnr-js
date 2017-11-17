@@ -41,7 +41,8 @@
     "rollup-plugin-eslint": "^4.0.0",
     "rollup-plugin-json": "^2.3.0",
     "rollup-plugin-node-resolve": "^3.0.0",
-    "rollup-plugin-uglify": "^2.0.1"
+    "rollup-plugin-uglify": "^2.0.1",
+    "xhr-mock": "v2.0.0-preview"
   },
   "dependencies": {
     "axios": "^0.16.2"
