@@ -23,7 +23,9 @@ export default class Client {
   }
 
   recognizeImage(data, options = {}) {
-    return this.connection(true, options)
+    const params = {}
+    if (options.public) { params.public = true }
+    return this.connection(true, Object.assign({}, options, { params }))
       .sendBinary('/recognitions', data)
       .then(this.handleResponse)
   }
@@ -46,7 +48,7 @@ export default class Client {
     if (useAPIKey && apiKey == null) {
       throw new PreconditionFailed('`apiKey` configuration is required.')
     }
-    const params = {}
+    const params = options.params || {}
     if ((config.timeout || 0) > 0) { params.timeout = config.timeout }
     return {
       apiKey, params,

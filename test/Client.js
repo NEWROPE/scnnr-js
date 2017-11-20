@@ -63,6 +63,15 @@ describe('Client', () => {
       return sendRequest()
     })
 
+    it('can send public parameter', () => {
+      nock(config.url)
+        .post(`/${client.config.version}${requestPath}`)
+        .query({ public: 'true' })
+        .reply(200, queuedRecognition)
+
+      return sendRequest({ public: true })
+    })
+
     behavesLikeRequestToGetRecognition('post', requestPath, true, sendRequest)
   })
 
