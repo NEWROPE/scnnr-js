@@ -10,10 +10,10 @@ export declare namespace Scnnr {
   interface RecognizeImageOptions extends Options {
     public?: boolean
   }
-  type RecognizeUrlOptions = Options
+  type RecognizeURLOptions = Options
   type FetchOptions = Options
   interface Client {
-    recognizeUrl(url: string, options?: RecognizeUrlOptions): Promise<Recognition>
+    recognizeURL(url: string, options?: RecognizeURLOptions): Promise<Recognition>
     recognizeImage(data: ArrayBuffer, options?: RecognizeImageOptions): Promise<Recognition>
     fetch(id: string, options?: FetchOptions): Promise<Recognition>
   }

@@ -16,7 +16,7 @@ export default class Client {
     this.config = Object.assign({}, defaults, config)
   }
 
-  recognizeUrl(url, options = {}) {
+  recognizeURL(url, options = {}) {
     return this.connection(true, options)
       .sendJson('/remote/recognitions', { url })
       .then(this.handleResponse)

@@ -211,8 +211,8 @@ var Client = function () {
   }
 
   createClass(Client, [{
-    key: 'recognizeUrl',
-    value: function recognizeUrl(url) {
+    key: 'recognizeURL',
+    value: function recognizeURL(url) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       return this.connection(true, options).sendJson('/remote/recognitions', { url: url }).then(this.handleResponse);
