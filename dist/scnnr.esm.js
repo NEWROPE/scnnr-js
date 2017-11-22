@@ -127,10 +127,31 @@ var Item = function Item(props) {
   this.labels = props.labels;
 };
 
+var Size = function Size(_ref) {
+  var width = _ref.width,
+      height = _ref.height;
+  classCallCheck(this, Size);
+
+  this.width = width;
+  this.height = height;
+};
+
+var Image = function Image(_ref) {
+  var url = _ref.url,
+      size = _ref.size;
+  classCallCheck(this, Image);
+
+  this.url = url;
+  this.size = new Size(size);
+};
+
+Image.Size = Size;
+
 var Recognition = function Recognition(_ref) {
   var id = _ref.id,
       objects = _ref.objects,
       state = _ref.state,
+      image = _ref.image,
       error = _ref.error;
   classCallCheck(this, Recognition);
 
@@ -139,10 +160,14 @@ var Recognition = function Recognition(_ref) {
     return new Item(obj);
   });
   this.state = state;
+  if (image != null) {
+    this.image = new Image(image);
+  }
   this.error = error;
 };
 
 Recognition.Item = Item;
+Recognition.Image = Image;
 
 var PreconditionFailed = function (_Error) {
   inherits(PreconditionFailed, _Error);
@@ -186,8 +211,8 @@ var Client = function () {
   }
 
   createClass(Client, [{
-    key: 'recognizeUrl',
-    value: function recognizeUrl(url) {
+    key: 'recognizeURL',
+    value: function recognizeURL(url) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       return this.connection(true, options).sendJson('/remote/recognitions', { url: url }).then(this.handleResponse);
@@ -197,7 +222,11 @@ var Client = function () {
     value: function recognizeImage(data) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      return this.connection(true, options).sendBinary('/recognitions', data).then(this.handleResponse);
+      var params = {};
+      if (options.public) {
+        params.public = true;
+      }
+      return this.connection(true, Object.assign({}, options, { params: params })).sendBinary('/recognitions', data).then(this.handleResponse);
     }
   }, {
     key: 'fetch',
@@ -224,7 +253,7 @@ var Client = function () {
       if (useAPIKey && apiKey == null) {
         throw new PreconditionFailed('`apiKey` configuration is required.');
       }
-      var params = {};
+      var params = options.params || {};
       if ((config.timeout || 0) > 0) {
         params.timeout = config.timeout;
       }

@@ -35,11 +35,11 @@ describe('Client', () => {
     }
   }
 
-  describe('recognizeUrl', () => {
+  describe('recognizeURL', () => {
     const requestPath = '/remote/recognitions'
     const url = 'https://example.com/dummy.jpg'
 
-    const sendRequest = (options = {}) => client.recognizeUrl(url, options)
+    const sendRequest = (options = {}) => client.recognizeURL(url, options)
 
     it('should send url in post body', () => {
       nock(config.url).post(`/${client.config.version}${requestPath}`, { url }).reply(200)
@@ -61,6 +61,15 @@ describe('Client', () => {
       })
 
       return sendRequest()
+    })
+
+    it('can send public parameter', () => {
+      nock(config.url)
+        .post(`/${client.config.version}${requestPath}`)
+        .query({ public: 'true' })
+        .reply(200, queuedRecognition)
+
+      return sendRequest({ public: true })
     })
 
     behavesLikeRequestToGetRecognition('post', requestPath, true, sendRequest)
