@@ -1,6 +1,6 @@
 {
   "name": "scnnr",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Official #CBK scnnr client library for JavaScript",
   "main": "dist/scnnr.umd.js",
   "module": "dist/scnnr.esm.js",
@@ -13,14 +13,14 @@
     "lint": "eslint 'src/**/*.js' 'test/**/*.js'",
     "lint:watch": "chokidar 'src/**/*.js' 'test/**/*.js' -c 'yarn lint && echo \"\\033[0;32mReadable codes!\\033[0;0m\"'"
   },
-  "repository": "git+https://github.com/hiroara/scnnr-js.git",
+  "repository": "git+https://github.com/NEWROPE/scnnr-js.git",
   "keywords": [],
   "author": "NEWROPE Co. Ltd.",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/hiroara/scnnr-js/issues"
+    "url": "https://github.com/NEWROPE/scnnr-js/issues"
   },
-  "homepage": "https://github.com/hiroara/scnnr-js#readme",
+  "homepage": "https://github.com/NEWROPE/scnnr-js#readme",
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
