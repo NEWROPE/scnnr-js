@@ -26,6 +26,8 @@ const client = scnnr({
 })
 ```
 
+Operations through the client basically return `Promise` instance and the promises will be resolved with a `Recognition` instance.
+
 ## Examples
 ### Basic usage
 Request image recognition by an image URL.
@@ -45,7 +47,7 @@ promisedRecognition = client.recognizeImage(image) // image is an ArrayBuffer
 ```
 
 `Recognition` class represents the image recognition result from API.
-If the recognition processing is completed, you will get `Recognition` instance whose state is `finished`.
+If the recognition processing is completed, the promise is resolved with `Recognition` with `finished` state.
 
 ```
 promisedRecognition
