@@ -131,7 +131,7 @@ promisedRecognition
  */
 ```
 
-If the timeout value is zero or `null`, you will get `Recognition` instance whose state is `queued`.
+If the timeout value is zero or `null`, the promise is resolved with `Recognition` with `queued` state.
 
 Then you can fetch the recognition result using `client.fetch`.
 
