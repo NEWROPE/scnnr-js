@@ -91,7 +91,7 @@ describe('Connection', () => {
   const handlesErrors = (method, requestPath, sendRequest) => {
     const testCases = [
       {
-        title: 'should handle 403 reponse',
+        title: 'should handle 403 response',
         mockResponse: { status: 403, body: forbiddenErrorResponse },
         expectations: {
           errorType: 'scnnr-api-error',
@@ -101,7 +101,7 @@ describe('Connection', () => {
         },
       },
       {
-        title: 'should handle 404 reponse',
+        title: 'should handle 404 response',
         mockResponse: { status: 404, body: notFoundErrorResponse },
         expectations: {
           errorType: 'scnnr-api-error',
@@ -111,7 +111,7 @@ describe('Connection', () => {
         },
       },
       {
-        title: 'should handle 422 reponse',
+        title: 'should handle 422 response',
         mockResponse: { status: 422, body: unprocessableEntityErrorResponse },
         expectations: {
           errorType: 'scnnr-api-error',
@@ -121,7 +121,7 @@ describe('Connection', () => {
         },
       },
       {
-        title: 'should handle 429 reponse',
+        title: 'should handle 429 response',
         mockResponse: { status: 429, body: tooManyRequestsErrorResponse },
         expectations: {
           errorType: 'scnnr-api-error',
@@ -131,7 +131,7 @@ describe('Connection', () => {
         },
       },
       {
-        title: 'should handle 500 reponse',
+        title: 'should handle 500 response',
         mockResponse: { status: 500, body: internalServerErrorResponse },
         expectations: {
           errorType: 'scnnr-api-error',
