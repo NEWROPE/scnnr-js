@@ -5,6 +5,14 @@ import { Buffer } from 'buffer'
 import { expect } from 'chai'
 import XHRMock from 'xhr-mock'
 
+import forbiddenErrorResponse from './fixtures/errors/forbidden_error.json'
+import notFoundErrorResponse from './fixtures/errors/not_found_error.json'
+import unprocessableEntityErrorResponse from './fixtures/errors/unprocessable_entity_error.json'
+import tooManyRequestsErrorResponse from './fixtures/errors/too_many_requests_error.json'
+import internalServerErrorResponse from './fixtures/errors/internal_server_error.json'
+
+import { Forbidden } from '../src/errors'
+
 import scnnr from '../dist/scnnr.esm'
 
 describe('Connection', () => {
@@ -80,6 +88,79 @@ describe('Connection', () => {
     })
   }
 
+  const handlesErrors = (method, requestPath, sendRequest) => {
+    const testCases = [
+      {
+        title: 'should handle 403 reponse',
+        mockResponse: { status: 403, body: forbiddenErrorResponse },
+        expectations: {
+          errorType: 'scnnr-api-error',
+          errorMessage: 'You don\'t have access to this resource',
+          errorStatusCode: 403,
+          errorName: 'Forbidden',
+        },
+      },
+      {
+        title: 'should handle 404 reponse',
+        mockResponse: { status: 404, body: notFoundErrorResponse },
+        expectations: {
+          errorType: 'scnnr-api-error',
+          errorMessage: 'Recognition (ID: some-id) is not found.',
+          errorStatusCode: 404,
+          errorName: 'NotFound',
+        },
+      },
+      {
+        title: 'should handle 422 reponse',
+        mockResponse: { status: 422, body: unprocessableEntityErrorResponse },
+        expectations: {
+          errorType: 'scnnr-api-error',
+          errorMessage: 'image: unknown format',
+          errorStatusCode: 422,
+          errorName: 'UnprocessableEntity',
+        },
+      },
+      {
+        title: 'should handle 429 reponse',
+        mockResponse: { status: 429, body: tooManyRequestsErrorResponse },
+        expectations: {
+          errorType: 'scnnr-api-error',
+          errorMessage: 'Exceeded request quota',
+          errorStatusCode: 429,
+          errorName: 'TooManyRequests',
+        },
+      },
+      {
+        title: 'should handle 500 reponse',
+        mockResponse: { status: 500, body: internalServerErrorResponse },
+        expectations: {
+          errorType: 'scnnr-api-error',
+          errorMessage: 'Something bad happened',
+          errorStatusCode: 500,
+          errorName: 'InternalServerError',
+        },
+      },
+    ]
+
+    describe('error handling', () => {
+      testCases.forEach(testCase => {
+        it(testCase.title, () => {
+          nock(config.url)
+            .intercept(requestPath, method)
+            .reply(testCase.mockResponse.status, testCase.mockResponse.body)
+
+          return sendRequest(connection)
+            .catch(err => {
+              expect(err).to.be.a(testCase.expectations.errorType)
+              expect(err.message).to.be.equal(testCase.expectations.errorMessage)
+              expect(err.statusCode).to.be.equal(testCase.expectations.errorStatusCode)
+              expect(err.name).to.be.equal(testCase.expectations.errorName)
+            })
+        })
+      })
+    })
+  }
+
   describe('get', () => {
     const requestPath = '/recognitions/some/recognition-id'
     const sendRequest = (connection, options = {}) => connection.get(requestPath, {}, options)
@@ -87,6 +168,7 @@ describe('Connection', () => {
     behavesLikeGenericRequest('get', requestPath, sendRequest)
     behavesLikeTimeoutableRequest('get', requestPath, sendRequest)
     behavesLikeRequestWithProgress('Download', 'get', requestPath, sendRequest)
+    handlesErrors('get', requestPath, sendRequest)
   })
 
   describe('sendJson', () => {
@@ -100,6 +182,7 @@ describe('Connection', () => {
     behavesLikeRequestWithAPIKey(requestPath, sendRequest)
     behavesLikeRequestWithProgress('Download', 'post', requestPath, sendRequest)
     behavesLikeRequestWithProgress('Upload', 'post', requestPath, sendRequest)
+    handlesErrors('post', requestPath, sendRequest)
 
     it('sends json body', () => {
       nock(config.url).post(requestPath, requestBody).reply(200)
@@ -119,6 +202,7 @@ describe('Connection', () => {
     behavesLikeRequestWithAPIKey(requestPath, sendRequest)
     behavesLikeRequestWithProgress('Download', 'post', requestPath, sendRequest)
     behavesLikeRequestWithProgress('Upload', 'post', requestPath, sendRequest)
+    handlesErrors('post', requestPath, sendRequest)
 
     it('sends binary-data', () => {
       nock(config.url, { reqheaders: { 'Content-Type': 'application/octet-stream' } })

@@ -77,6 +77,111 @@ var possibleConstructorReturn = function (self, call) {
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
 
+var ScnnrError = function (_Error) {
+  inherits(ScnnrError, _Error);
+
+  function ScnnrError(message) {
+    classCallCheck(this, ScnnrError);
+
+    var _this = possibleConstructorReturn(this, (ScnnrError.__proto__ || Object.getPrototypeOf(ScnnrError)).call(this, message));
+
+    _this[Symbol.toStringTag] = 'scnnr-error';
+    if (Error.hasOwnProperty('captureStackTrace')) {
+      Error.captureStackTrace(_this, ScnnrError);
+    } else {
+      _this.stack = new Error().stack;
+    }
+    return _this;
+  }
+
+  return ScnnrError;
+}(Error);
+
+var PreconditionFailed = function (_ScnnrError) {
+  inherits(PreconditionFailed, _ScnnrError);
+
+  function PreconditionFailed(message) {
+    classCallCheck(this, PreconditionFailed);
+
+    var _this2 = possibleConstructorReturn(this, (PreconditionFailed.__proto__ || Object.getPrototypeOf(PreconditionFailed)).call(this, message));
+
+    _this2.name = 'PreconditionFailed';
+    return _this2;
+  }
+
+  return PreconditionFailed;
+}(ScnnrError);
+
+var ScnnrAPIError = function (_ScnnrError2) {
+  inherits(ScnnrAPIError, _ScnnrError2);
+
+  function ScnnrAPIError(_ref) {
+    var title = _ref.title,
+        message = _ref.message,
+        statusCode = _ref.statusCode,
+        rawResponse = _ref.rawResponse;
+    classCallCheck(this, ScnnrAPIError);
+
+    var _this3 = possibleConstructorReturn(this, (ScnnrAPIError.__proto__ || Object.getPrototypeOf(ScnnrAPIError)).call(this, message));
+
+    _this3[Symbol.toStringTag] = 'scnnr-api-error';
+    _this3.name = (title || 'ScnnrAPIError').replace(/ /g, '');
+    _this3.statusCode = statusCode;
+    _this3.rawResponse = rawResponse;
+    return _this3;
+  }
+
+  return ScnnrAPIError;
+}(ScnnrError);
+
+var ForbiddenError = function (_ScnnrAPIError) {
+  inherits(ForbiddenError, _ScnnrAPIError);
+
+  function ForbiddenError(_ref2) {
+    var rawResponse = _ref2.rawResponse;
+    classCallCheck(this, ForbiddenError);
+
+    var message = 'You don\'t have access to this resource';
+    return possibleConstructorReturn(this, (ForbiddenError.__proto__ || Object.getPrototypeOf(ForbiddenError)).call(this, { title: 'Forbidden', message: message, rawResponse: rawResponse, statusCode: 403 }));
+  }
+
+  return ForbiddenError;
+}(ScnnrAPIError);
+
+var TooManyRequestsError = function (_ScnnrAPIError2) {
+  inherits(TooManyRequestsError, _ScnnrAPIError2);
+
+  function TooManyRequestsError(_ref3) {
+    var rawResponse = _ref3.rawResponse;
+    classCallCheck(this, TooManyRequestsError);
+
+    var message = 'Exceeded request quota';
+    return possibleConstructorReturn(this, (TooManyRequestsError.__proto__ || Object.getPrototypeOf(TooManyRequestsError)).call(this, { title: 'TooManyRequests', message: message, rawResponse: rawResponse, statusCode: 429 }));
+  }
+
+  return TooManyRequestsError;
+}(ScnnrAPIError);
+
+var httpErrorsByCode = {
+  '403': ForbiddenError,
+  '429': TooManyRequestsError
+};
+
+function getErrorByStatusCode(statusCode) {
+  return httpErrorsByCode[statusCode] || ScnnrAPIError;
+}
+
+
+
+var errors = Object.freeze({
+	ScnnrError: ScnnrError,
+	PreconditionFailed: PreconditionFailed,
+	ScnnrAPIError: ScnnrAPIError,
+	ForbiddenError: ForbiddenError,
+	TooManyRequestsError: TooManyRequestsError,
+	getErrorByStatusCode: getErrorByStatusCode
+});
+
 var Connection = function () {
   function Connection(_ref) {
     var url = _ref.url,
@@ -97,6 +202,10 @@ var Connection = function () {
       onUploadProgress: onUploadProgress,
       onDownloadProgress: onDownloadProgress
     });
+
+    this.httpClient.interceptors.response.use(function (response) {
+      return response;
+    }, this.errorInterceptor);
   }
 
   createClass(Connection, [{
@@ -118,6 +227,21 @@ var Connection = function () {
     key: 'send',
     value: function send(path, data, contentType) {
       return this.httpClient.post(path, data, { headers: { 'Content-Type': contentType } });
+    }
+  }, {
+    key: 'errorInterceptor',
+    value: function errorInterceptor(err) {
+      var statusCode = err.response ? err.response.status : 500;
+      var errorType = getErrorByStatusCode(statusCode);
+
+      return Promise.reject(new errorType({
+        title: err.response.data.title,
+        // In case the error is unkown and does not contain
+        // details, use the original error message
+        message: err.response.data.detail || err.message,
+        rawResponse: err.response.data,
+        statusCode: statusCode
+      }));
     }
   }]);
   return Connection;
@@ -172,32 +296,6 @@ var Recognition = function Recognition(_ref) {
 
 Recognition.Item = Item;
 Recognition.Image = Image;
-
-var PreconditionFailed = function (_Error) {
-  inherits(PreconditionFailed, _Error);
-
-  function PreconditionFailed(message) {
-    classCallCheck(this, PreconditionFailed);
-
-    var _this = possibleConstructorReturn(this, (PreconditionFailed.__proto__ || Object.getPrototypeOf(PreconditionFailed)).call(this, message));
-
-    _this.name = 'PreconditionFailed';
-    if (Error.hasOwnProperty('captureStackTrace')) {
-      Error.captureStackTrace(_this, PreconditionFailed);
-    } else {
-      _this.stack = new Error().stack;
-    }
-    return _this;
-  }
-
-  return PreconditionFailed;
-}(Error);
-
-
-
-var errors = Object.freeze({
-	PreconditionFailed: PreconditionFailed
-});
 
 function sanitizeAPIKey(key) {
   if (typeof key !== 'string') {
