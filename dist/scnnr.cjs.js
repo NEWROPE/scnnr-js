@@ -231,7 +231,10 @@ var Connection = function () {
   }, {
     key: 'errorInterceptor',
     value: function errorInterceptor(err) {
-      var statusCode = err.response ? err.response.status : 500;
+      // If err does not have response, is not an HTTP error. Reject normally
+      if (!err.response) return Promise.reject(err);
+
+      var statusCode = err.response.status;
       var errorType = getErrorByStatusCode(statusCode);
 
       return Promise.reject(new errorType({

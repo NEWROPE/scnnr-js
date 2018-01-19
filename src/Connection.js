@@ -28,7 +28,10 @@ export default class Connection {
   }
 
   errorInterceptor(err) {
-    const statusCode = err.response ? err.response.status : 500
+    // If err does not have response, is not an HTTP error. Reject normally
+    if (!err.response) return Promise.reject(err)
+
+    const statusCode = err.response.status
     const errorType = getErrorByStatusCode(statusCode)
 
     return Promise.reject(new errorType({
