@@ -81,7 +81,6 @@ var ScnnrError = function (_Error) {
 
     var _this = possibleConstructorReturn(this, (ScnnrError.__proto__ || Object.getPrototypeOf(ScnnrError)).call(this, message));
 
-    _this[Symbol.toStringTag] = 'scnnr-error';
     if (Error.hasOwnProperty('captureStackTrace')) {
       Error.captureStackTrace(_this, ScnnrError);
     } else {
@@ -108,74 +107,50 @@ var PreconditionFailed = function (_ScnnrError) {
   return PreconditionFailed;
 }(ScnnrError);
 
+function buildMessage(title, detail, type) {
+  var message = '';
+
+  if (title) message = '[' + title + ']';
+  if (detail) message = message + ' ' + detail;
+  if (type) message = message + ' (' + type + ')';
+
+  return message;
+}
+
 var ScnnrAPIError = function (_ScnnrError2) {
   inherits(ScnnrAPIError, _ScnnrError2);
 
   function ScnnrAPIError(_ref) {
     var title = _ref.title,
-        message = _ref.message,
+        detail = _ref.detail,
+        type = _ref.type,
         statusCode = _ref.statusCode,
         rawResponse = _ref.rawResponse;
     classCallCheck(this, ScnnrAPIError);
 
+    var message = buildMessage(title, detail, type);
+
     var _this3 = possibleConstructorReturn(this, (ScnnrAPIError.__proto__ || Object.getPrototypeOf(ScnnrAPIError)).call(this, message));
 
-    _this3[Symbol.toStringTag] = 'scnnr-api-error';
-    _this3.name = (title || 'ScnnrAPIError').replace(/ /g, '');
-    _this3.statusCode = statusCode;
-    _this3.rawResponse = rawResponse;
+    _this3.name = 'ScnnrAPIError';
+    Object.assign(_this3, { title: title, detail: detail, type: type, statusCode: statusCode, rawResponse: rawResponse });
+    // this.title = title
+    // this.detail = detail
+    // this.type = type
+    // this.statusCode = statusCode
+    // this.rawResponse = rawResponse
     return _this3;
   }
 
   return ScnnrAPIError;
 }(ScnnrError);
 
-var ForbiddenError = function (_ScnnrAPIError) {
-  inherits(ForbiddenError, _ScnnrAPIError);
-
-  function ForbiddenError(_ref2) {
-    var rawResponse = _ref2.rawResponse;
-    classCallCheck(this, ForbiddenError);
-
-    var message = 'You don\'t have access to this resource';
-    return possibleConstructorReturn(this, (ForbiddenError.__proto__ || Object.getPrototypeOf(ForbiddenError)).call(this, { title: 'Forbidden', message: message, rawResponse: rawResponse, statusCode: 403 }));
-  }
-
-  return ForbiddenError;
-}(ScnnrAPIError);
-
-var TooManyRequestsError = function (_ScnnrAPIError2) {
-  inherits(TooManyRequestsError, _ScnnrAPIError2);
-
-  function TooManyRequestsError(_ref3) {
-    var rawResponse = _ref3.rawResponse;
-    classCallCheck(this, TooManyRequestsError);
-
-    var message = 'Exceeded request quota';
-    return possibleConstructorReturn(this, (TooManyRequestsError.__proto__ || Object.getPrototypeOf(TooManyRequestsError)).call(this, { title: 'TooManyRequests', message: message, rawResponse: rawResponse, statusCode: 429 }));
-  }
-
-  return TooManyRequestsError;
-}(ScnnrAPIError);
-
-var httpErrorsByCode = {
-  '403': ForbiddenError,
-  '429': TooManyRequestsError
-};
-
-function getErrorByStatusCode(statusCode) {
-  return httpErrorsByCode[statusCode] || ScnnrAPIError;
-}
-
 
 
 var errors = Object.freeze({
 	ScnnrError: ScnnrError,
 	PreconditionFailed: PreconditionFailed,
-	ScnnrAPIError: ScnnrAPIError,
-	ForbiddenError: ForbiddenError,
-	TooManyRequestsError: TooManyRequestsError,
-	getErrorByStatusCode: getErrorByStatusCode
+	ScnnrAPIError: ScnnrAPIError
 });
 
 var Connection = function () {
@@ -230,16 +205,14 @@ var Connection = function () {
       // If err does not have response, is not an HTTP error. Reject normally
       if (!err.response) return Promise.reject(err);
 
-      var statusCode = err.response.status;
-      var errorType = getErrorByStatusCode(statusCode);
-
-      return Promise.reject(new errorType({
-        title: err.response.data.title,
+      return Promise.reject(new ScnnrAPIError({
+        title: err.response.data.title || err.response.data.message,
         // In case the error is unkown and does not contain
         // details, use the original error message
-        message: err.response.data.detail || err.message,
+        detail: err.response.data.detail || err.message,
+        type: err.response.data.type,
         rawResponse: err.response.data,
-        statusCode: statusCode
+        statusCode: err.response.status
       }));
     }
   }]);

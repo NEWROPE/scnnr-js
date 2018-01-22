@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { getErrorByStatusCode } from './errors'
+import { ScnnrAPIError } from './errors'
 
 export default class Connection {
   constructor({ url, apiKey, params, onUploadProgress, onDownloadProgress }) {
@@ -31,16 +31,14 @@ export default class Connection {
     // If err does not have response, is not an HTTP error. Reject normally
     if (!err.response) return Promise.reject(err)
 
-    const statusCode = err.response.status
-    const errorType = getErrorByStatusCode(statusCode)
-
-    return Promise.reject(new errorType({
-      title: err.response.data.title,
+    return Promise.reject(new ScnnrAPIError({
+      title: err.response.data.title || err.response.data.message,
       // In case the error is unkown and does not contain
       // details, use the original error message
-      message: err.response.data.detail || err.message,
+      detail: err.response.data.detail || err.message,
+      type: err.response.data.type,
       rawResponse: err.response.data,
-      statusCode,
+      statusCode: err.response.status,
     }))
   }
 }

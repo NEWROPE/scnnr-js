@@ -1,7 +1,6 @@
 export class ScnnrError extends Error {
   constructor(message) {
     super(message)
-    this[Symbol.toStringTag] = 'scnnr-error'
     if (Error.hasOwnProperty('captureStackTrace')) {
       Error.captureStackTrace(this, ScnnrError)
     } else {
@@ -17,36 +16,21 @@ export class PreconditionFailed extends ScnnrError {
   }
 }
 
+function buildMessage(title, detail, type) {
+  let message = ''
+
+  if (title) message = `[${title}]`
+  if (detail) message = `${message} ${detail}`
+  if (type) message = `${message} (${type})`
+
+  return message
+}
+
 export class ScnnrAPIError extends ScnnrError {
-  constructor({ title, message, statusCode, rawResponse }) {
+  constructor({ title, detail, type, statusCode, rawResponse }) {
+    const message = buildMessage(title, detail, type)
     super(message)
-    this[Symbol.toStringTag] = 'scnnr-api-error'
-    this.name = (title || 'ScnnrAPIError').replace(/ /g, '')
-    this.statusCode = statusCode
-    this.rawResponse = rawResponse
+    this.name = 'ScnnrAPIError'
+    Object.assign(this, { title, detail, type, statusCode, rawResponse })
   }
 }
-
-export class ForbiddenError extends ScnnrAPIError {
-  constructor({ rawResponse }) {
-    const message = 'You don\'t have access to this resource'
-    super({ title: 'Forbidden', message, rawResponse, statusCode: 403 })
-  }
-}
-
-export class TooManyRequestsError extends ScnnrAPIError {
-  constructor({ rawResponse }) {
-    const message = 'Exceeded request quota'
-    super({ title: 'TooManyRequests', message, rawResponse, statusCode: 429 })
-  }
-}
-
-const httpErrorsByCode = {
-  '403': ForbiddenError,
-  '429': TooManyRequestsError,
-}
-
-export function getErrorByStatusCode(statusCode) {
-  return httpErrorsByCode[statusCode] || ScnnrAPIError
-}
-

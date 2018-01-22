@@ -11,7 +11,7 @@ import unprocessableEntityErrorResponse from './fixtures/errors/unprocessable_en
 import tooManyRequestsErrorResponse from './fixtures/errors/too_many_requests_error.json'
 import internalServerErrorResponse from './fixtures/errors/internal_server_error.json'
 
-import { Forbidden } from '../src/errors'
+import { ScnnrAPIError } from '../src/errors'
 
 import scnnr from '../dist/scnnr.esm'
 
@@ -91,53 +91,62 @@ describe('Connection', () => {
   const handlesErrors = (method, requestPath, sendRequest) => {
     const testCases = [
       {
-        title: 'should handle 403 response',
-        mockResponse: { status: 403, body: forbiddenErrorResponse },
-        expectations: {
-          errorType: 'scnnr-api-error',
-          errorMessage: 'You don\'t have access to this resource',
-          errorStatusCode: 403,
-          errorName: 'Forbidden',
-        },
-      },
-      {
         title: 'should handle 404 response',
         mockResponse: { status: 404, body: notFoundErrorResponse },
         expectations: {
-          errorType: 'scnnr-api-error',
-          errorMessage: 'Recognition (ID: some-id) is not found.',
+          errorClass: ScnnrAPIError,
+          errorMessage: '[Not Found] Recognition (ID: some-id) is not found. (not-found)',
           errorStatusCode: 404,
-          errorName: 'NotFound',
+          errorTitle: 'Not Found',
+          errorDetail: 'Recognition (ID: some-id) is not found.',
+          errorType: 'not-found',
         },
       },
       {
         title: 'should handle 422 response',
         mockResponse: { status: 422, body: unprocessableEntityErrorResponse },
         expectations: {
-          errorType: 'scnnr-api-error',
-          errorMessage: 'image: unknown format',
+          errorClass: ScnnrAPIError,
+          errorMessage: '[Unprocessable Entity] image: unknown format (unprocessable-entity)',
           errorStatusCode: 422,
-          errorName: 'UnprocessableEntity',
-        },
-      },
-      {
-        title: 'should handle 429 response',
-        mockResponse: { status: 429, body: tooManyRequestsErrorResponse },
-        expectations: {
-          errorType: 'scnnr-api-error',
-          errorMessage: 'Exceeded request quota',
-          errorStatusCode: 429,
-          errorName: 'TooManyRequests',
+          errorTitle: 'Unprocessable Entity',
+          errorDetail: 'image: unknown format',
+          errorType: 'unprocessable-entity',
         },
       },
       {
         title: 'should handle 500 response',
         mockResponse: { status: 500, body: internalServerErrorResponse },
         expectations: {
-          errorType: 'scnnr-api-error',
-          errorMessage: 'Something bad happened',
+          errorClass: ScnnrAPIError,
+          errorMessage: '[Internal Server Error] Something bad happened (internal-server-error)',
           errorStatusCode: 500,
-          errorName: 'InternalServerError',
+          errorTitle: 'Internal Server Error',
+          errorDetail: 'Something bad happened',
+          errorType: 'internal-server-error',
+        },
+      },
+      // Special cases where response only contains message. (AWS API Gateway)
+      {
+        title: 'should handle 403 response',
+        mockResponse: { status: 403, body: forbiddenErrorResponse },
+        expectations: {
+          errorClass: ScnnrAPIError,
+          errorMessage: '[Forbidden] Request failed with status code 403',
+          errorStatusCode: 403,
+          errorTitle: 'Forbidden',
+          errorDetail: 'Request failed with status code 403',
+        },
+      },
+      {
+        title: 'should handle 429 response',
+        mockResponse: { status: 429, body: tooManyRequestsErrorResponse },
+        expectations: {
+          errorClass: ScnnrAPIError,
+          errorMessage: '[Too Many Requests] Request failed with status code 429',
+          errorStatusCode: 429,
+          errorTitle: 'Too Many Requests',
+          errorDetail: 'Request failed with status code 429',
         },
       },
     ]
@@ -151,10 +160,12 @@ describe('Connection', () => {
 
           return sendRequest(connection)
             .catch(err => {
-              expect(err).to.be.a(testCase.expectations.errorType)
+              expect(err.name).to.be.equal('ScnnrAPIError')
               expect(err.message).to.be.equal(testCase.expectations.errorMessage)
               expect(err.statusCode).to.be.equal(testCase.expectations.errorStatusCode)
-              expect(err.name).to.be.equal(testCase.expectations.errorName)
+              expect(err.title).to.be.equal(testCase.expectations.errorTitle)
+              expect(err.detail).to.be.equal(testCase.expectations.errorDetail)
+              expect(err.type).to.be.equal(testCase.expectations.errorType)
             })
         })
       })
