@@ -147,24 +147,34 @@ var Image = function Image(_ref) {
 
 Image.Size = Size;
 
-var Recognition = function Recognition(_ref) {
-  var id = _ref.id,
-      objects = _ref.objects,
-      state = _ref.state,
-      image = _ref.image,
-      error = _ref.error;
-  classCallCheck(this, Recognition);
+var Recognition = function () {
+  function Recognition(_ref) {
+    var id = _ref.id,
+        objects = _ref.objects,
+        state = _ref.state,
+        image = _ref.image,
+        error = _ref.error;
+    classCallCheck(this, Recognition);
 
-  this.id = id;
-  this.objects = (objects || []).map(function (obj) {
-    return new Item(obj);
-  });
-  this.state = state;
-  if (image != null) {
-    this.image = new Image(image);
+    this.id = id;
+    this.objects = (objects || []).map(function (obj) {
+      return new Item(obj);
+    });
+    this.state = state;
+    if (image != null) {
+      this.image = new Image(image);
+    }
+    this.error = error;
   }
-  this.error = error;
-};
+
+  createClass(Recognition, [{
+    key: 'isFinished',
+    value: function isFinished() {
+      return this.state === 'finished';
+    }
+  }]);
+  return Recognition;
+}();
 
 Recognition.Item = Item;
 Recognition.Image = Image;
@@ -189,10 +199,31 @@ var PreconditionFailed = function (_Error) {
   return PreconditionFailed;
 }(Error);
 
+var PollTimeout = function (_Error2) {
+  inherits(PollTimeout, _Error2);
+
+  function PollTimeout(message) {
+    classCallCheck(this, PollTimeout);
+
+    var _this2 = possibleConstructorReturn(this, (PollTimeout.__proto__ || Object.getPrototypeOf(PollTimeout)).call(this, message));
+
+    _this2.name = 'PollTimeout';
+    if (Error.hasOwnProperty('captureStackTrace')) {
+      Error.captureStackTrace(_this2, PollTimeout);
+    } else {
+      _this2.stack = new Error().stack;
+    }
+    return _this2;
+  }
+
+  return PollTimeout;
+}(Error);
+
 
 
 var errors = Object.freeze({
-	PreconditionFailed: PreconditionFailed
+	PreconditionFailed: PreconditionFailed,
+	PollTimeout: PollTimeout
 });
 
 function sanitizeAPIKey(key) {
@@ -215,18 +246,40 @@ var Client = function () {
     value: function recognizeURL(url) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      return this.connection(true, options).sendJson('/remote/recognitions', { url: url }).then(this.handleResponse);
+      var request = this.connection(true, options).sendJson('/remote/recognitions', { url: url }).then(this.handleResponse);
+
+      return this.pollingRecognize(request, options.timeout);
     }
   }, {
     key: 'recognizeImage',
     value: function recognizeImage(data) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      var params = {};
-      if (options.public) {
-        params.public = true;
-      }
-      return this.connection(true, Object.assign({}, options, { params: params })).sendBinary('/recognitions', data).then(this.handleResponse);
+      var params = { public: options.public };
+      var fullOptions = Object.assign({}, options, { params: params });
+
+      var request = this.connection(true, fullOptions).sendBinary('/recognitions', data).then(this.handleResponse);
+
+      return this.pollingRecognize(request, fullOptions.timeout);
+    }
+
+    // Takes a request and timeout and checks if the recognize request
+    // should start the polling process and calls poll if positive
+
+  }, {
+    key: 'pollingRecognize',
+    value: function pollingRecognize(request, timeout) {
+      var _this = this;
+
+      return new Promise(function (resolve, reject) {
+        request.then(function (recognition) {
+          if (timeout > 0 && !recognition.isFinished()) {
+            return _this.poll(recognition.id, timeout, resolve, reject);
+          }
+
+          return resolve(recognition);
+        }).catch(reject);
+      });
     }
   }, {
     key: 'fetch',
@@ -234,6 +287,40 @@ var Client = function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       return this.connection(false, options).get('/recognitions/' + id).then(this.handleResponse);
+    }
+
+    // poll calls itself until recognition is finished or time expires
+
+  }, {
+    key: 'poll',
+    value: function poll(id, remainingTime, resolve, reject) {
+      var _this2 = this;
+
+      var startPollTimeout = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 100;
+
+      var startTime = new Date().getTime();
+
+      this.fetch(id).then(function (recognition) {
+        if (!recognition.isFinished()) {
+          var elapsedTime = (new Date().getTime() - startTime) / 1000; // Divide to convert to seconds
+          var newRemainingTime = remainingTime - elapsedTime;
+
+          if (newRemainingTime <= 0) {
+            return reject(new PollTimeout('Polling for ' + id + ' timed out'));
+          }
+
+          // See if next polling is going to be over remaining timeout time
+          // if it is just use the remaining time for the next call to poll
+          var isNextPollingOverTimeout = newRemainingTime - startPollTimeout / 1000 <= 0;
+          var pollTimeout = isNextPollingOverTimeout ? newRemainingTime * 1000 : startPollTimeout;
+
+          return setTimeout(function () {
+            return _this2.poll.call(_this2, id, newRemainingTime, resolve, reject, startPollTimeout * 1.5);
+          }, pollTimeout);
+        }
+
+        return resolve(recognition);
+      }).catch(reject);
     }
   }, {
     key: 'handleResponse',

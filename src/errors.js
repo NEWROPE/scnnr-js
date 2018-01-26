@@ -9,3 +9,15 @@ export class PreconditionFailed extends Error {
     }
   }
 }
+
+export class PollTimeout extends Error {
+  constructor(message) {
+    super(message)
+    this.name = 'PollTimeout'
+    if (Error.hasOwnProperty('captureStackTrace')) {
+      Error.captureStackTrace(this, PollTimeout)
+    } else {
+      this.stack = (new Error()).stack
+    }
+  }
+}

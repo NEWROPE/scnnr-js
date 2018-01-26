@@ -9,6 +9,10 @@ export default class Recognition {
     if (image != null) { this.image = new Image(image) }
     this.error = error
   }
+
+  isFinished() {
+    return this.state === 'finished'
+  }
 }
 
 Recognition.Item = Item

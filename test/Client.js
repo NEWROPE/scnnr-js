@@ -5,6 +5,7 @@ import { expect } from 'chai'
 
 import scnnr from '../dist/scnnr.esm'
 import queuedRecognition from './fixtures/queued_recognition.json'
+import finishedRecognition from './fixtures/finished_recognition.json'
 
 describe('Client', () => {
   const config = {
@@ -35,6 +36,49 @@ describe('Client', () => {
     }
   }
 
+  const pollsWhenTimeoutIsGreaterThanZero = (method, requestPath, needsAPIKey, sendRequest) => {
+    it('should do polling successfully if timeout is greater than 0', () => {
+      // First request
+      nock(config.url)[method](`/${client.config.version}${requestPath}`)
+        .query({ timeout: 150 })
+        .reply(200, queuedRecognition)
+
+      const pollMocks = nock(config.url)
+        // Polling requests
+        .get(`/${client.config.version}/recognitions/${queuedRecognition.id}`)
+        .times(3)
+        .reply(200, queuedRecognition)
+        // Final requests successfull response
+        .get(`/${client.config.version}/recognitions/${queuedRecognition.id}`)
+        .reply(200, finishedRecognition)
+
+      return sendRequest({ timeout: 150 })
+        .then(result => {
+          expect(pollMocks.isDone()).to.be.true
+          expect(result.state).to.equal('finished')
+        })
+    })
+
+    it('should timeout if time has ran out', () => {
+      // First request
+      nock(config.url)[method](`/${client.config.version}${requestPath}`)
+        .query({ timeout: 1 })
+        .reply(200, queuedRecognition)
+
+      const pollMocks = nock(config.url)
+        // Polling requests
+        .get(`/${client.config.version}/recognitions/${queuedRecognition.id}`)
+        .times(100)
+        .delay(200)
+        .reply(200, queuedRecognition)
+
+      return sendRequest({ timeout: 1 })
+        .catch(err => {
+          expect(err.name).to.equal('PollTimeout')
+        })
+    })
+  }
+
   describe('recognizeURL', () => {
     const requestPath = '/remote/recognitions'
     const url = 'https://example.com/dummy.jpg'
@@ -48,6 +92,7 @@ describe('Client', () => {
     })
 
     behavesLikeRequestToGetRecognition('post', requestPath, true, sendRequest)
+    pollsWhenTimeoutIsGreaterThanZero('post', requestPath, true, sendRequest)
   })
 
   describe('recognizeImage', () => {
@@ -73,6 +118,7 @@ describe('Client', () => {
     })
 
     behavesLikeRequestToGetRecognition('post', requestPath, true, sendRequest)
+    pollsWhenTimeoutIsGreaterThanZero('post', requestPath, true, sendRequest)
   })
 
   describe('fetch', () => {
