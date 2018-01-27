@@ -1,4 +1,4 @@
-import defaults from './client/defaults'
+import defaults from './Client/defaults'
 import Connection from './Connection'
 import Recognition from './Recognition'
 import { PreconditionFailed } from './errors'
