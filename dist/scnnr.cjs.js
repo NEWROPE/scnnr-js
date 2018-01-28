@@ -77,6 +77,97 @@ var possibleConstructorReturn = function (self, call) {
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
 
+var ScnnrError = function (_Error) {
+  inherits(ScnnrError, _Error);
+
+  function ScnnrError(message) {
+    classCallCheck(this, ScnnrError);
+
+    var _this = possibleConstructorReturn(this, (ScnnrError.__proto__ || Object.getPrototypeOf(ScnnrError)).call(this, message));
+
+    if (Error.hasOwnProperty('captureStackTrace')) {
+      Error.captureStackTrace(_this, ScnnrError);
+    } else {
+      _this.stack = new Error().stack;
+    }
+    return _this;
+  }
+
+  return ScnnrError;
+}(Error);
+
+var PollTimeout = function (_ScnnrError) {
+  inherits(PollTimeout, _ScnnrError);
+
+  function PollTimeout(message) {
+    classCallCheck(this, PollTimeout);
+
+    var _this2 = possibleConstructorReturn(this, (PollTimeout.__proto__ || Object.getPrototypeOf(PollTimeout)).call(this, message));
+
+    _this2.name = 'PollTimeout';
+    return _this2;
+  }
+
+  return PollTimeout;
+}(ScnnrError);
+
+var PreconditionFailed = function (_ScnnrError2) {
+  inherits(PreconditionFailed, _ScnnrError2);
+
+  function PreconditionFailed(message) {
+    classCallCheck(this, PreconditionFailed);
+
+    var _this3 = possibleConstructorReturn(this, (PreconditionFailed.__proto__ || Object.getPrototypeOf(PreconditionFailed)).call(this, message));
+
+    _this3.name = 'PreconditionFailed';
+    return _this3;
+  }
+
+  return PreconditionFailed;
+}(ScnnrError);
+
+function buildMessage(title, detail, type) {
+  var message = '';
+
+  if (title) message = '[' + title + ']';
+  if (detail) message = message + ' ' + detail;
+  if (type) message = message + ' (' + type + ')';
+
+  return message;
+}
+
+var ScnnrAPIError = function (_ScnnrError3) {
+  inherits(ScnnrAPIError, _ScnnrError3);
+
+  function ScnnrAPIError(_ref) {
+    var title = _ref.title,
+        detail = _ref.detail,
+        type = _ref.type,
+        statusCode = _ref.statusCode,
+        rawResponse = _ref.rawResponse;
+    classCallCheck(this, ScnnrAPIError);
+
+    var message = buildMessage(title, detail, type);
+
+    var _this4 = possibleConstructorReturn(this, (ScnnrAPIError.__proto__ || Object.getPrototypeOf(ScnnrAPIError)).call(this, message));
+
+    _this4.name = 'ScnnrAPIError';
+    Object.assign(_this4, { title: title, detail: detail, type: type, statusCode: statusCode, rawResponse: rawResponse });
+    return _this4;
+  }
+
+  return ScnnrAPIError;
+}(ScnnrError);
+
+
+
+var errors = Object.freeze({
+	ScnnrError: ScnnrError,
+	PollTimeout: PollTimeout,
+	PreconditionFailed: PreconditionFailed,
+	ScnnrAPIError: ScnnrAPIError
+});
+
 var Connection = function () {
   function Connection(_ref) {
     var url = _ref.url,
@@ -97,6 +188,10 @@ var Connection = function () {
       onUploadProgress: onUploadProgress,
       onDownloadProgress: onDownloadProgress
     });
+
+    this.httpClient.interceptors.response.use(function (response) {
+      return response;
+    }, this.errorInterceptor);
   }
 
   createClass(Connection, [{
@@ -118,6 +213,22 @@ var Connection = function () {
     key: 'send',
     value: function send(path, data, contentType) {
       return this.httpClient.post(path, data, { headers: { 'Content-Type': contentType } });
+    }
+  }, {
+    key: 'errorInterceptor',
+    value: function errorInterceptor(err) {
+      // If err does not have response, is not an HTTP error. Reject normally
+      if (!err.response) return Promise.reject(err);
+
+      return Promise.reject(new ScnnrAPIError({
+        title: err.response.data.title || err.response.data.message,
+        // In case the error is unkown and does not contain
+        // details, use the original error message
+        detail: err.response.data.detail || err.message,
+        type: err.response.data.type,
+        rawResponse: err.response.data,
+        statusCode: err.response.status
+      }));
     }
   }]);
   return Connection;
@@ -182,53 +293,6 @@ var Recognition = function () {
 
 Recognition.Item = Item;
 Recognition.Image = Image;
-
-var PreconditionFailed = function (_Error) {
-  inherits(PreconditionFailed, _Error);
-
-  function PreconditionFailed(message) {
-    classCallCheck(this, PreconditionFailed);
-
-    var _this = possibleConstructorReturn(this, (PreconditionFailed.__proto__ || Object.getPrototypeOf(PreconditionFailed)).call(this, message));
-
-    _this.name = 'PreconditionFailed';
-    if (Error.hasOwnProperty('captureStackTrace')) {
-      Error.captureStackTrace(_this, PreconditionFailed);
-    } else {
-      _this.stack = new Error().stack;
-    }
-    return _this;
-  }
-
-  return PreconditionFailed;
-}(Error);
-
-var PollTimeout = function (_Error2) {
-  inherits(PollTimeout, _Error2);
-
-  function PollTimeout(message) {
-    classCallCheck(this, PollTimeout);
-
-    var _this2 = possibleConstructorReturn(this, (PollTimeout.__proto__ || Object.getPrototypeOf(PollTimeout)).call(this, message));
-
-    _this2.name = 'PollTimeout';
-    if (Error.hasOwnProperty('captureStackTrace')) {
-      Error.captureStackTrace(_this2, PollTimeout);
-    } else {
-      _this2.stack = new Error().stack;
-    }
-    return _this2;
-  }
-
-  return PollTimeout;
-}(Error);
-
-
-
-var errors = Object.freeze({
-	PreconditionFailed: PreconditionFailed,
-	PollTimeout: PollTimeout
-});
 
 function sanitizeAPIKey(key) {
   if (typeof key !== 'string') {
