@@ -290,12 +290,53 @@ var Recognition = function () {
 Recognition.Item = Item;
 Recognition.Image = Image;
 
+function poll(config) {
+  var _this = this;
+
+  var requestFunc = config.requestFunc,
+      conditionChecker = config.conditionChecker,
+      remainingTime = config.remainingTime,
+      resolve = config.resolve,
+      reject = config.reject;
+
+  var timeout = (remainingTime || 0) - 25 < 0 ? remainingTime : 25;
+
+  if (remainingTime <= 0) {
+    return reject(new PollTimeout('Polling timed out'));
+  }
+
+  requestFunc({ timeout: timeout }).then(function (result) {
+    if (conditionChecker(result)) return resolve(result);
+
+    var newRemainingTime = remainingTime - timeout;
+
+    var newConfig = {
+      requestFunc: requestFunc,
+      conditionChecker: conditionChecker,
+      remainingTime: newRemainingTime,
+      resolve: resolve,
+      reject: reject
+    };
+
+    return setTimeout(function () {
+      return poll.call(_this, newConfig);
+    }, timeout);
+  }).catch(reject);
+}
+
 function sanitizeAPIKey(key) {
   if (typeof key !== 'string') {
     return null;
   }
   key = key.replace(/^\s*/, '').replace(/\s*$/, '');
   return key === '' ? null : key;
+}
+
+function getTimeoutLength() {
+  var timeout = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+  var timeoutMaxAllowed = arguments[1];
+
+  return timeout - timeoutMaxAllowed < 0 ? timeout : timeoutMaxAllowed;
 }
 
 var Client = function () {
@@ -308,37 +349,59 @@ var Client = function () {
   createClass(Client, [{
     key: 'recognizeURL',
     value: function recognizeURL(url) {
+      var _this = this;
+
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      var request = this.connection(true, options).sendJson('/remote/recognitions', { url: url }).then(this.handleResponse);
-
-      return this.pollingRecognize(request, options.timeout);
+      return this.recognizeRequest(function (options) {
+        return _this.connection(true, options).sendJson('/remote/recognitions', { url: url });
+      }, options);
     }
   }, {
     key: 'recognizeImage',
     value: function recognizeImage(data) {
+      var _this2 = this;
+
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       var params = { public: options.public };
       var fullOptions = Object.assign({}, options, { params: params });
 
-      var request = this.connection(true, fullOptions).sendBinary('/recognitions', data).then(this.handleResponse);
-
-      return this.pollingRecognize(request, fullOptions.timeout);
+      return this.recognizeRequest(function (options) {
+        return _this2.connection(true, options).sendBinary('/recognitions', data);
+      }, fullOptions);
     }
 
     // Takes a request and timeout and checks if the recognize request
     // should start the polling process and calls poll if positive
 
   }, {
-    key: 'pollingRecognize',
-    value: function pollingRecognize(request, timeout) {
-      var _this = this;
+    key: 'recognizeRequest',
+    value: function recognizeRequest(requestFunc, options) {
+      var _this3 = this;
+
+      if (options.timeout > 100) {
+        throw new ScnnrError('Timeout time greater than 100 not allowed');
+      }
+
+      var timeoutForFirstRequest = getTimeoutLength(options.timeout, 25);
+      var opt = Object.assign({}, options, { timeout: timeoutForFirstRequest });
+      var request = requestFunc(opt);
 
       return new Promise(function (resolve, reject) {
-        request.then(function (recognition) {
-          if (timeout > 0 && !recognition.isFinished()) {
-            return _this.poll(recognition.id, timeout, resolve, reject);
+        request.then(_this3.handleResponse).then(function (recognition) {
+          if ((options.timeout || 0) > 0 && !recognition.isFinished()) {
+            return poll({
+              requestFunc: function requestFunc(options) {
+                return _this3.fetch(recognition.id, options);
+              },
+              conditionChecker: function conditionChecker(recognition) {
+                return recognition.isFinished();
+              },
+              remainingTime: options.timeout - timeoutForFirstRequest,
+              resolve: resolve,
+              reject: reject
+            });
           }
 
           return resolve(recognition);
@@ -351,40 +414,6 @@ var Client = function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       return this.connection(false, options).get('/recognitions/' + id).then(this.handleResponse);
-    }
-
-    // poll calls itself until recognition is finished or time expires
-
-  }, {
-    key: 'poll',
-    value: function poll(id, remainingTime, resolve, reject) {
-      var _this2 = this;
-
-      var startPollTimeout = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 100;
-
-      var startTime = new Date().getTime();
-
-      this.fetch(id).then(function (recognition) {
-        if (!recognition.isFinished()) {
-          var elapsedTime = (new Date().getTime() - startTime) / 1000; // Divide to convert to seconds
-          var newRemainingTime = remainingTime - elapsedTime;
-
-          if (newRemainingTime <= 0) {
-            return reject(new PollTimeout('Polling for ' + id + ' timed out'));
-          }
-
-          // See if next polling is going to be over remaining timeout time
-          // if it is just use the remaining time for the next call to poll
-          var isNextPollingOverTimeout = newRemainingTime - startPollTimeout / 1000 <= 0;
-          var pollTimeout = isNextPollingOverTimeout ? newRemainingTime * 1000 : startPollTimeout;
-
-          return setTimeout(function () {
-            return _this2.poll.call(_this2, id, newRemainingTime, resolve, reject, startPollTimeout * 1.5);
-          }, pollTimeout);
-        }
-
-        return resolve(recognition);
-      }).catch(reject);
     }
   }, {
     key: 'handleResponse',

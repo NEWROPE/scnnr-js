@@ -39,21 +39,47 @@ describe('Client', () => {
   const pollsWhenTimeoutIsGreaterThanZero = (method, requestPath, needsAPIKey, sendRequest) => {
     it('should do polling successfully if timeout is greater than 0', () => {
       // First request
-      nock(config.url)[method](`/${client.config.version}${requestPath}`)
-        .query({ timeout: 150 })
+      const recognitionMock = nock(config.url)[method](`/${client.config.version}${requestPath}`)
+        .query({ timeout: 25 })
         .reply(200, queuedRecognition)
 
       const pollMocks = nock(config.url)
         // Polling requests
         .get(`/${client.config.version}/recognitions/${queuedRecognition.id}`)
-        .times(3)
+        .query({ timeout: 25 })
+        .times(2)
         .reply(200, queuedRecognition)
-        // Final requests successfull response
+        // Final request successfull response
         .get(`/${client.config.version}/recognitions/${queuedRecognition.id}`)
+        .query({ timeout: 25 })
         .reply(200, finishedRecognition)
 
-      return sendRequest({ timeout: 150 })
+      return sendRequest({ timeout: 100 })
         .then(result => {
+          expect(recognitionMock.isDone()).to.be.true
+          expect(pollMocks.isDone()).to.be.true
+          expect(result.state).to.equal('finished')
+        })
+    })
+
+    it('should poll with odd timeout times', () => {
+      // First request
+      const recognitionMock = nock(config.url)[method](`/${client.config.version}${requestPath}`)
+        .query({ timeout: 25 })
+        .reply(200, queuedRecognition)
+
+      const pollMocks = nock(config.url)
+        .get(`/${client.config.version}/recognitions/${queuedRecognition.id}`)
+        .query({ timeout: 25 })
+        .reply(200, queuedRecognition)
+        // Final request successfull response
+        .get(`/${client.config.version}/recognitions/${queuedRecognition.id}`)
+        .query({ timeout: 15 })
+        .reply(200, finishedRecognition)
+
+      return sendRequest({ timeout: 65 })
+        .then(result => {
+          expect(recognitionMock.isDone()).to.be.true
           expect(pollMocks.isDone()).to.be.true
           expect(result.state).to.equal('finished')
         })
@@ -62,20 +88,25 @@ describe('Client', () => {
     it('should timeout if time has ran out', () => {
       // First request
       nock(config.url)[method](`/${client.config.version}${requestPath}`)
-        .query({ timeout: 1 })
+        .query({ timeout: 2 })
         .reply(200, queuedRecognition)
 
       const pollMocks = nock(config.url)
         // Polling requests
         .get(`/${client.config.version}/recognitions/${queuedRecognition.id}`)
+        .query({ timeout: 2 })
         .times(100)
-        .delay(200)
         .reply(200, queuedRecognition)
 
-      return sendRequest({ timeout: 1 })
+      return sendRequest({ timeout: 2 })
         .catch(err => {
           expect(err.name).to.equal('PollTimeout')
         })
+    })
+
+    it('should not allow timeout greater than 100', () => {
+      expect(() => sendRequest({ timeout: 200 }))
+        .to.throw('Timeout time greater than 100 not allowed')
     })
   }
 

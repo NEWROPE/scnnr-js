@@ -1,7 +1,8 @@
 import defaults from './Client/defaults'
 import Connection from './Connection'
 import Recognition from './Recognition'
-import { PreconditionFailed, PollTimeout } from './errors'
+import { PreconditionFailed, ScnnrError } from './errors'
+import poll from './polling'
 
 
 function sanitizeAPIKey(key) {
@@ -12,38 +13,55 @@ function sanitizeAPIKey(key) {
   return key === '' ? null : key
 }
 
+function getTimeoutLength(timeout = 0, timeoutMaxAllowed) {
+  return (timeout - timeoutMaxAllowed) < 0 ? timeout : timeoutMaxAllowed
+}
+
 export default class Client {
   constructor(config) {
     this.config = Object.assign({}, defaults, config)
   }
 
   recognizeURL(url, options = {}) {
-    const request = this.connection(true, options)
-      .sendJson('/remote/recognitions', { url })
-      .then(this.handleResponse)
-
-    return this.pollingRecognize(request, options.timeout)
+    return this.recognizeRequest(
+      (options) => this.connection(true, options).sendJson('/remote/recognitions', { url }),
+      options
+    )
   }
 
   recognizeImage(data, options = {}) {
     const params = { public: options.public }
     const fullOptions = Object.assign({}, options, { params })
 
-    const request = this.connection(true, fullOptions)
-      .sendBinary('/recognitions', data)
-      .then(this.handleResponse)
-
-    return this.pollingRecognize(request, fullOptions.timeout)
+    return this.recognizeRequest(
+      (options) => this.connection(true, options).sendBinary('/recognitions', data),
+      fullOptions
+    )
   }
 
   // Takes a request and timeout and checks if the recognize request
   // should start the polling process and calls poll if positive
-  pollingRecognize(request, timeout) {
+  recognizeRequest(requestFunc, options) {
+    if (options.timeout > 100) {
+      throw new ScnnrError('Timeout time greater than 100 not allowed')
+    }
+
+    const timeoutForFirstRequest = getTimeoutLength(options.timeout, 25)
+    const opt = Object.assign({}, options, { timeout: timeoutForFirstRequest })
+    const request = requestFunc(opt)
+
     return new Promise((resolve, reject) => {
       request
+        .then(this.handleResponse)
         .then(recognition => {
-          if (timeout > 0 && !recognition.isFinished()) {
-            return this.poll(recognition.id, timeout, resolve, reject)
+          if ((options.timeout || 0) > 0 && !recognition.isFinished()) {
+            return poll({
+              requestFunc: (options) => this.fetch(recognition.id, options),
+              conditionChecker: (recognition) => recognition.isFinished(),
+              remainingTime: options.timeout - timeoutForFirstRequest, 
+              resolve, 
+              reject,
+            })
           }
 
           return resolve(recognition)
@@ -56,36 +74,6 @@ export default class Client {
     return this.connection(false, options)
       .get(`/recognitions/${id}`)
       .then(this.handleResponse)
-  }
-
-  // poll calls itself until recognition is finished or time expires
-  poll(id, remainingTime, resolve, reject, startPollTimeout = 100) {
-    const startTime = new Date().getTime()
-
-    this.fetch(id)
-      .then(recognition => {
-        if (!recognition.isFinished()) {
-          const elapsedTime = (new Date().getTime() - startTime) / 1000 // Divide to convert to seconds
-          const newRemainingTime = remainingTime - elapsedTime
-
-          if (newRemainingTime <= 0) {
-            return reject(new PollTimeout(`Polling for ${id} timed out`))
-          }
-
-          // See if next polling is going to be over remaining timeout time
-          // if it is just use the remaining time for the next call to poll
-          const isNextPollingOverTimeout = (newRemainingTime - (startPollTimeout / 1000)) <= 0
-          const pollTimeout =  isNextPollingOverTimeout ? newRemainingTime * 1000 : startPollTimeout
-
-          return setTimeout(() =>
-            this.poll.call(
-              this, id, newRemainingTime, resolve, reject, startPollTimeout * 1.5
-            ), pollTimeout)
-        }
-
-        return resolve(recognition)
-      })
-      .catch(reject)
   }
 
   handleResponse(response) { return new Recognition(response.data) }

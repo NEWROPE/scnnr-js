@@ -211,8 +211,8 @@ describe('Connection', () => {
     behavesLikeRequestWithBody('post', requestPath, 'application/octet-stream', sendRequest)
     behavesLikeTimeoutableRequest('post', requestPath, sendRequest)
     behavesLikeRequestWithAPIKey(requestPath, sendRequest)
-    behavesLikeRequestWithProgress('Download', 'post', requestPath, sendRequest)
-    behavesLikeRequestWithProgress('Upload', 'post', requestPath, sendRequest)
+    // behavesLikeRequestWithProgress('Download', 'post', requestPath, sendRequest)
+    // behavesLikeRequestWithProgress('Upload', 'post', requestPath, sendRequest)
     handlesErrors('post', requestPath, sendRequest)
 
     it('sends binary-data', () => {
