@@ -1,30 +1,31 @@
 import { PollTimeout } from './errors'
 
 function poll(config) {
-  const { requestFunc, conditionChecker, remainingTime, resolve, reject } = config
+  const { requestFunc, conditionChecker, remainingTime } = config
   const timeout = ((remainingTime || 0) - 25) < 0 ? remainingTime : 25
 
-  if (remainingTime <= 0) {
-    return reject(new PollTimeout('Polling timed out'))
-  }
+  return new Promise((resolve, reject) => {
+    if (remainingTime <= 0) {
+      return reject(new PollTimeout('Polling timed out'))
+    }
 
-  requestFunc({ timeout })
-    .then(result => {
-      if (conditionChecker(result)) return resolve(result)
-      
-      const newRemainingTime = remainingTime - timeout
+    return requestFunc({ timeout })
+      .then(result => {
+        if (conditionChecker(result)) {
+          return resolve(result)
+        }
+        
+        const newRemainingTime = remainingTime - timeout
 
-      const newConfig = { 
-        requestFunc, 
-        conditionChecker, 
-        remainingTime: newRemainingTime, 
-        resolve, 
-        reject,
-      }
-      
-      return setTimeout(() => poll.call(this, newConfig), timeout)
-    })
-    .catch(reject)
+        const newConfig = { 
+          requestFunc, 
+          conditionChecker, 
+          remainingTime: newRemainingTime, 
+        }
+        
+        return resolve(poll.call(this, newConfig))
+      })
+  })
 }
 
 export default poll

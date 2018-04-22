@@ -26,9 +26,18 @@ export class PreconditionFailed extends ScnnrError {
 function buildMessage(title, detail, type) {
   let message = ''
 
-  if (title) message = `[${title}]`
-  if (detail) message = `${message} ${detail}`
-  if (type) message = `${message} (${type})`
+  if (title) {
+    message = `[${title}]`
+  }
+  
+  if (detail) {
+    message = `${message} ${detail}`
+  }
+  
+  if (type) {
+    message = `${message} (${type})`
+  }
+  
 
   return message
 }

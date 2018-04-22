@@ -129,9 +129,17 @@ var PreconditionFailed = function (_ScnnrError2) {
 function buildMessage(title, detail, type) {
   var message = '';
 
-  if (title) message = '[' + title + ']';
-  if (detail) message = message + ' ' + detail;
-  if (type) message = message + ' (' + type + ')';
+  if (title) {
+    message = '[' + title + ']';
+  }
+
+  if (detail) {
+    message = message + ' ' + detail;
+  }
+
+  if (type) {
+    message = message + ' (' + type + ')';
+  }
 
   return message;
 }
@@ -218,7 +226,9 @@ var Connection = function () {
     key: 'errorInterceptor',
     value: function errorInterceptor(err) {
       // If err does not have response, is not an HTTP error. Reject normally
-      if (!err.response) return Promise.reject(err);
+      if (!err.response) {
+        return Promise.reject(err);
+      }
 
       return Promise.reject(new ScnnrAPIError({
         title: err.response.data.title || err.response.data.message,
@@ -299,33 +309,31 @@ function poll(config) {
 
   var requestFunc = config.requestFunc,
       conditionChecker = config.conditionChecker,
-      remainingTime = config.remainingTime,
-      resolve = config.resolve,
-      reject = config.reject;
+      remainingTime = config.remainingTime;
 
   var timeout = (remainingTime || 0) - 25 < 0 ? remainingTime : 25;
 
-  if (remainingTime <= 0) {
-    return reject(new PollTimeout('Polling timed out'));
-  }
+  return new Promise(function (resolve, reject) {
+    if (remainingTime <= 0) {
+      return reject(new PollTimeout('Polling timed out'));
+    }
 
-  requestFunc({ timeout: timeout }).then(function (result) {
-    if (conditionChecker(result)) return resolve(result);
+    return requestFunc({ timeout: timeout }).then(function (result) {
+      if (conditionChecker(result)) {
+        return resolve(result);
+      }
 
-    var newRemainingTime = remainingTime - timeout;
+      var newRemainingTime = remainingTime - timeout;
 
-    var newConfig = {
-      requestFunc: requestFunc,
-      conditionChecker: conditionChecker,
-      remainingTime: newRemainingTime,
-      resolve: resolve,
-      reject: reject
-    };
+      var newConfig = {
+        requestFunc: requestFunc,
+        conditionChecker: conditionChecker,
+        remainingTime: newRemainingTime
+      };
 
-    return setTimeout(function () {
-      return poll.call(_this, newConfig);
-    }, timeout);
-  }).catch(reject);
+      return resolve(poll.call(_this, newConfig));
+    });
+  });
 }
 
 function sanitizeAPIKey(key) {
@@ -402,14 +410,14 @@ var Client = function () {
               conditionChecker: function conditionChecker(recognition) {
                 return recognition.isFinished();
               },
-              remainingTime: options.timeout - timeoutForFirstRequest,
-              resolve: resolve,
-              reject: reject
+              remainingTime: options.timeout - timeoutForFirstRequest
+              // resolve, 
+              // reject,
             });
           }
 
           return resolve(recognition);
-        }).catch(reject);
+        }).then(resolve).catch(reject);
       });
     }
   }, {

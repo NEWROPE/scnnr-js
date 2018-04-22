@@ -59,13 +59,14 @@ export default class Client {
               requestFunc: (options) => this.fetch(recognition.id, options),
               conditionChecker: (recognition) => recognition.isFinished(),
               remainingTime: options.timeout - timeoutForFirstRequest, 
-              resolve, 
-              reject,
+              // resolve, 
+              // reject,
             })
           }
 
           return resolve(recognition)
         })
+        .then(resolve)
         .catch(reject)
     })
   }

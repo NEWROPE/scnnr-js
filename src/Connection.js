@@ -29,7 +29,9 @@ export default class Connection {
 
   errorInterceptor(err) {
     // If err does not have response, is not an HTTP error. Reject normally
-    if (!err.response) return Promise.reject(err)
+    if (!err.response) {
+      return Promise.reject(err)
+    }
 
     return Promise.reject(new ScnnrAPIError({
       title: err.response.data.title || err.response.data.message,

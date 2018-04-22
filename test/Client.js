@@ -6,6 +6,7 @@ import { expect } from 'chai'
 import scnnr from '../dist/scnnr.esm'
 import queuedRecognition from './fixtures/queued_recognition.json'
 import finishedRecognition from './fixtures/finished_recognition.json'
+import errorRecognition from './fixtures/error_recognition.json'
 
 describe('Client', () => {
   const config = {
