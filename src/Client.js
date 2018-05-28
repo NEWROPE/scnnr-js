@@ -1,7 +1,7 @@
 import defaults from './Client/defaults'
 import Connection from './Connection'
 import Recognition from './Recognition'
-import { PreconditionFailed, ScnnrError } from './errors'
+import { PreconditionFailed, RecognitionError } from './errors'
 import poll from './polling'
 
 
@@ -42,10 +42,6 @@ export default class Client {
   // Takes a request and timeout and checks if the recognize request
   // should start the polling process and calls poll if positive
   recognizeRequest(requestFunc, options) {
-    if (options.timeout > 100) {
-      throw new ScnnrError('Timeout time greater than 100 not allowed')
-    }
-
     const timeoutForFirstRequest = getTimeoutLength(options.timeout, 25)
     const opt = Object.assign({}, options, { timeout: timeoutForFirstRequest })
     const request = requestFunc(opt)
@@ -59,8 +55,6 @@ export default class Client {
               requestFunc: (options) => this.fetch(recognition.id, options),
               conditionChecker: (recognition) => recognition.isFinished(),
               remainingTime: options.timeout - timeoutForFirstRequest, 
-              // resolve, 
-              // reject,
             })
           }
 
@@ -77,7 +71,15 @@ export default class Client {
       .then(this.handleResponse)
   }
 
-  handleResponse(response) { return new Recognition(response.data) }
+  handleResponse(response) {
+    const recognition = new Recognition(response.data)
+
+    if (recognition.hasError()) {
+      throw new RecognitionError(recognition.error, recognition)
+    }
+
+    return recognition
+  }
 
   connection(useAPIKey, options) {
     return new Connection(this.connectionConfig(useAPIKey, options))

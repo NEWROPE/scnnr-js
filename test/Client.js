@@ -35,6 +35,19 @@ describe('Client', () => {
         expect(() => sendRequest({ apiKey: null })).not.to.throw()
       })
     }
+
+    it('should reject promise if recognition has error', () => {
+      nock(config.url)[method](`/${client.config.version}${requestPath}`).reply(200, errorRecognition)
+
+      return sendRequest()
+        .then(result => expect(result).to.be.undefined)
+        .catch(err => {
+          expect(err.detail).to.equal('some error occurred')
+          expect(err.title).to.equal('Recognition Error')
+          expect(err.type).to.equal('recognition-error')
+          expect(err.recognition.id).to.equal('20170829/ed4c674c-7970-4e9c-9b26-1b6076b36b49')
+        })
+    })
   }
 
   const pollsWhenTimeoutIsGreaterThanZero = (method, requestPath, needsAPIKey, sendRequest) => {
@@ -103,11 +116,6 @@ describe('Client', () => {
         .catch(err => {
           expect(err.name).to.equal('PollTimeout')
         })
-    })
-
-    it('should not allow timeout greater than 100', () => {
-      expect(() => sendRequest({ timeout: 200 }))
-        .to.throw('Timeout time greater than 100 not allowed')
     })
   }
 

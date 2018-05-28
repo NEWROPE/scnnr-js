@@ -167,13 +167,35 @@ var ScnnrAPIError = function (_ScnnrError3) {
   return ScnnrAPIError;
 }(ScnnrError);
 
+var RecognitionError = function (_ScnnrError4) {
+  inherits(RecognitionError, _ScnnrError4);
+
+  function RecognitionError(_ref2, recognition) {
+    var title = _ref2.title,
+        detail = _ref2.detail,
+        type = _ref2.type;
+    classCallCheck(this, RecognitionError);
+
+    var message = buildMessage(title, detail, type);
+
+    var _this5 = possibleConstructorReturn(this, (RecognitionError.__proto__ || Object.getPrototypeOf(RecognitionError)).call(this, message));
+
+    _this5.name = 'RecognitionError';
+    Object.assign(_this5, { title: title, detail: detail, type: type, recognition: recognition });
+    return _this5;
+  }
+
+  return RecognitionError;
+}(ScnnrError);
+
 
 
 var errors = Object.freeze({
 	ScnnrError: ScnnrError,
 	PollTimeout: PollTimeout,
 	PreconditionFailed: PreconditionFailed,
-	ScnnrAPIError: ScnnrAPIError
+	ScnnrAPIError: ScnnrAPIError,
+	RecognitionError: RecognitionError
 });
 
 var Connection = function () {
@@ -297,6 +319,11 @@ var Recognition = function () {
     value: function isFinished() {
       return this.state === 'finished';
     }
+  }, {
+    key: 'hasError',
+    value: function hasError() {
+      return !!this.error;
+    }
   }]);
   return Recognition;
 }();
@@ -392,10 +419,6 @@ var Client = function () {
     value: function recognizeRequest(requestFunc, options) {
       var _this3 = this;
 
-      if (options.timeout > 100) {
-        throw new ScnnrError('Timeout time greater than 100 not allowed');
-      }
-
       var timeoutForFirstRequest = getTimeoutLength(options.timeout, 25);
       var opt = Object.assign({}, options, { timeout: timeoutForFirstRequest });
       var request = requestFunc(opt);
@@ -411,8 +434,6 @@ var Client = function () {
                 return recognition.isFinished();
               },
               remainingTime: options.timeout - timeoutForFirstRequest
-              // resolve, 
-              // reject,
             });
           }
 
@@ -430,7 +451,13 @@ var Client = function () {
   }, {
     key: 'handleResponse',
     value: function handleResponse(response) {
-      return new Recognition(response.data);
+      var recognition = new Recognition(response.data);
+
+      if (recognition.hasError()) {
+        throw new RecognitionError(recognition.error, recognition);
+      }
+
+      return recognition;
     }
   }, {
     key: 'connection',

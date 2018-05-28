@@ -13,6 +13,10 @@ export default class Recognition {
   isFinished() {
     return this.state === 'finished'
   }
+
+  hasError() {
+    return !!this.error
+  }
 }
 
 Recognition.Item = Item

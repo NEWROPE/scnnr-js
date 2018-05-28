@@ -50,3 +50,12 @@ export class ScnnrAPIError extends ScnnrError {
     Object.assign(this, { title, detail, type, statusCode, rawResponse })
   }
 }
+
+export class RecognitionError extends ScnnrError {
+  constructor({ title, detail, type }, recognition) {
+    const message = buildMessage(title, detail, type)
+    super(message)
+    this.name = 'RecognitionError'
+    Object.assign(this, { title, detail, type, recognition })
+  }
+}
