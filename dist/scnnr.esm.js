@@ -92,16 +92,31 @@ var ScnnrError = function (_Error) {
   return ScnnrError;
 }(Error);
 
-var PreconditionFailed = function (_ScnnrError) {
-  inherits(PreconditionFailed, _ScnnrError);
+var PollTimeout = function (_ScnnrError) {
+  inherits(PollTimeout, _ScnnrError);
+
+  function PollTimeout(message) {
+    classCallCheck(this, PollTimeout);
+
+    var _this2 = possibleConstructorReturn(this, (PollTimeout.__proto__ || Object.getPrototypeOf(PollTimeout)).call(this, message));
+
+    _this2.name = 'PollTimeout';
+    return _this2;
+  }
+
+  return PollTimeout;
+}(ScnnrError);
+
+var PreconditionFailed = function (_ScnnrError2) {
+  inherits(PreconditionFailed, _ScnnrError2);
 
   function PreconditionFailed(message) {
     classCallCheck(this, PreconditionFailed);
 
-    var _this2 = possibleConstructorReturn(this, (PreconditionFailed.__proto__ || Object.getPrototypeOf(PreconditionFailed)).call(this, message));
+    var _this3 = possibleConstructorReturn(this, (PreconditionFailed.__proto__ || Object.getPrototypeOf(PreconditionFailed)).call(this, message));
 
-    _this2.name = 'PreconditionFailed';
-    return _this2;
+    _this3.name = 'PreconditionFailed';
+    return _this3;
   }
 
   return PreconditionFailed;
@@ -110,15 +125,23 @@ var PreconditionFailed = function (_ScnnrError) {
 function buildMessage(title, detail, type) {
   var message = '';
 
-  if (title) message = '[' + title + ']';
-  if (detail) message = message + ' ' + detail;
-  if (type) message = message + ' (' + type + ')';
+  if (title) {
+    message = '[' + title + ']';
+  }
+
+  if (detail) {
+    message = message + ' ' + detail;
+  }
+
+  if (type) {
+    message = message + ' (' + type + ')';
+  }
 
   return message;
 }
 
-var ScnnrAPIError = function (_ScnnrError2) {
-  inherits(ScnnrAPIError, _ScnnrError2);
+var ScnnrAPIError = function (_ScnnrError3) {
+  inherits(ScnnrAPIError, _ScnnrError3);
 
   function ScnnrAPIError(_ref) {
     var title = _ref.title,
@@ -130,27 +153,45 @@ var ScnnrAPIError = function (_ScnnrError2) {
 
     var message = buildMessage(title, detail, type);
 
-    var _this3 = possibleConstructorReturn(this, (ScnnrAPIError.__proto__ || Object.getPrototypeOf(ScnnrAPIError)).call(this, message));
+    var _this4 = possibleConstructorReturn(this, (ScnnrAPIError.__proto__ || Object.getPrototypeOf(ScnnrAPIError)).call(this, message));
 
-    _this3.name = 'ScnnrAPIError';
-    Object.assign(_this3, { title: title, detail: detail, type: type, statusCode: statusCode, rawResponse: rawResponse });
-    // this.title = title
-    // this.detail = detail
-    // this.type = type
-    // this.statusCode = statusCode
-    // this.rawResponse = rawResponse
-    return _this3;
+    _this4.name = 'ScnnrAPIError';
+    Object.assign(_this4, { title: title, detail: detail, type: type, statusCode: statusCode, rawResponse: rawResponse });
+    return _this4;
   }
 
   return ScnnrAPIError;
+}(ScnnrError);
+
+var RecognitionError = function (_ScnnrError4) {
+  inherits(RecognitionError, _ScnnrError4);
+
+  function RecognitionError(_ref2, recognition) {
+    var title = _ref2.title,
+        detail = _ref2.detail,
+        type = _ref2.type;
+    classCallCheck(this, RecognitionError);
+
+    var message = buildMessage(title, detail, type);
+
+    var _this5 = possibleConstructorReturn(this, (RecognitionError.__proto__ || Object.getPrototypeOf(RecognitionError)).call(this, message));
+
+    _this5.name = 'RecognitionError';
+    Object.assign(_this5, { title: title, detail: detail, type: type, recognition: recognition });
+    return _this5;
+  }
+
+  return RecognitionError;
 }(ScnnrError);
 
 
 
 var errors = Object.freeze({
 	ScnnrError: ScnnrError,
+	PollTimeout: PollTimeout,
 	PreconditionFailed: PreconditionFailed,
-	ScnnrAPIError: ScnnrAPIError
+	ScnnrAPIError: ScnnrAPIError,
+	RecognitionError: RecognitionError
 });
 
 var Connection = function () {
@@ -203,7 +244,9 @@ var Connection = function () {
     key: 'errorInterceptor',
     value: function errorInterceptor(err) {
       // If err does not have response, is not an HTTP error. Reject normally
-      if (!err.response) return Promise.reject(err);
+      if (!err.response) {
+        return Promise.reject(err);
+      }
 
       return Promise.reject(new ScnnrAPIError({
         title: err.response.data.title || err.response.data.message,
@@ -247,27 +290,74 @@ var Image = function Image(_ref) {
 
 Image.Size = Size;
 
-var Recognition = function Recognition(_ref) {
-  var id = _ref.id,
-      objects = _ref.objects,
-      state = _ref.state,
-      image = _ref.image,
-      error = _ref.error;
-  classCallCheck(this, Recognition);
+var Recognition = function () {
+  function Recognition(_ref) {
+    var id = _ref.id,
+        objects = _ref.objects,
+        state = _ref.state,
+        image = _ref.image,
+        error = _ref.error;
+    classCallCheck(this, Recognition);
 
-  this.id = id;
-  this.objects = (objects || []).map(function (obj) {
-    return new Item(obj);
-  });
-  this.state = state;
-  if (image != null) {
-    this.image = new Image(image);
+    this.id = id;
+    this.objects = (objects || []).map(function (obj) {
+      return new Item(obj);
+    });
+    this.state = state;
+    if (image != null) {
+      this.image = new Image(image);
+    }
+    this.error = error;
   }
-  this.error = error;
-};
+
+  createClass(Recognition, [{
+    key: 'isFinished',
+    value: function isFinished() {
+      return this.state === 'finished';
+    }
+  }, {
+    key: 'hasError',
+    value: function hasError() {
+      return !!this.error;
+    }
+  }]);
+  return Recognition;
+}();
 
 Recognition.Item = Item;
 Recognition.Image = Image;
+
+function poll(config) {
+  var _this = this;
+
+  var requestFunc = config.requestFunc,
+      conditionChecker = config.conditionChecker,
+      remainingTime = config.remainingTime;
+
+  var timeout = (remainingTime || 0) - 25 < 0 ? remainingTime : 25;
+
+  return new Promise(function (resolve, reject) {
+    if (remainingTime <= 0) {
+      return reject(new PollTimeout('Polling timed out'));
+    }
+
+    return requestFunc({ timeout: timeout }).then(function (result) {
+      if (conditionChecker(result)) {
+        return resolve(result);
+      }
+
+      var newRemainingTime = remainingTime - timeout;
+
+      var newConfig = {
+        requestFunc: requestFunc,
+        conditionChecker: conditionChecker,
+        remainingTime: newRemainingTime
+      };
+
+      return resolve(poll.call(_this, newConfig));
+    });
+  });
+}
 
 function sanitizeAPIKey(key) {
   if (typeof key !== 'string') {
@@ -275,6 +365,13 @@ function sanitizeAPIKey(key) {
   }
   key = key.replace(/^\s*/, '').replace(/\s*$/, '');
   return key === '' ? null : key;
+}
+
+function getTimeoutLength() {
+  var timeout = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+  var timeoutMaxAllowed = arguments[1];
+
+  return timeout - timeoutMaxAllowed < 0 ? timeout : timeoutMaxAllowed;
 }
 
 var Client = function () {
@@ -287,20 +384,58 @@ var Client = function () {
   createClass(Client, [{
     key: 'recognizeURL',
     value: function recognizeURL(url) {
+      var _this = this;
+
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      return this.connection(true, options).sendJson('/remote/recognitions', { url: url }).then(this.handleResponse);
+      return this.recognizeRequest(function (options) {
+        return _this.connection(true, options).sendJson('/remote/recognitions', { url: url });
+      }, options);
     }
   }, {
     key: 'recognizeImage',
     value: function recognizeImage(data) {
+      var _this2 = this;
+
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-      var params = {};
-      if (options.public) {
-        params.public = true;
-      }
-      return this.connection(true, Object.assign({}, options, { params: params })).sendBinary('/recognitions', data).then(this.handleResponse);
+      var params = { public: options.public };
+      var fullOptions = Object.assign({}, options, { params: params });
+
+      return this.recognizeRequest(function (options) {
+        return _this2.connection(true, options).sendBinary('/recognitions', data);
+      }, fullOptions);
+    }
+
+    // Takes a request and timeout and checks if the recognize request
+    // should start the polling process and calls poll if positive
+
+  }, {
+    key: 'recognizeRequest',
+    value: function recognizeRequest(requestFunc, options) {
+      var _this3 = this;
+
+      var timeoutForFirstRequest = getTimeoutLength(options.timeout, 25);
+      var opt = Object.assign({}, options, { timeout: timeoutForFirstRequest });
+      var request = requestFunc(opt);
+
+      return new Promise(function (resolve, reject) {
+        request.then(_this3.handleResponse).then(function (recognition) {
+          if ((options.timeout || 0) > 0 && !recognition.isFinished()) {
+            return poll({
+              requestFunc: function requestFunc(options) {
+                return _this3.fetch(recognition.id, options);
+              },
+              conditionChecker: function conditionChecker(recognition) {
+                return recognition.isFinished();
+              },
+              remainingTime: options.timeout - timeoutForFirstRequest
+            });
+          }
+
+          return resolve(recognition);
+        }).then(resolve).catch(reject);
+      });
     }
   }, {
     key: 'fetch',
@@ -312,7 +447,13 @@ var Client = function () {
   }, {
     key: 'handleResponse',
     value: function handleResponse(response) {
-      return new Recognition(response.data);
+      var recognition = new Recognition(response.data);
+
+      if (recognition.hasError()) {
+        throw new RecognitionError(recognition.error, recognition);
+      }
+
+      return recognition;
     }
   }, {
     key: 'connection',

@@ -9,6 +9,13 @@ export class ScnnrError extends Error {
   }
 }
 
+export class PollTimeout extends ScnnrError {
+  constructor(message) {
+    super(message)
+    this.name = 'PollTimeout'
+  }
+}
+
 export class PreconditionFailed extends ScnnrError {
   constructor(message) {
     super(message)
@@ -19,9 +26,18 @@ export class PreconditionFailed extends ScnnrError {
 function buildMessage(title, detail, type) {
   let message = ''
 
-  if (title) message = `[${title}]`
-  if (detail) message = `${message} ${detail}`
-  if (type) message = `${message} (${type})`
+  if (title) {
+    message = `[${title}]`
+  }
+  
+  if (detail) {
+    message = `${message} ${detail}`
+  }
+  
+  if (type) {
+    message = `${message} (${type})`
+  }
+  
 
   return message
 }
@@ -32,5 +48,14 @@ export class ScnnrAPIError extends ScnnrError {
     super(message)
     this.name = 'ScnnrAPIError'
     Object.assign(this, { title, detail, type, statusCode, rawResponse })
+  }
+}
+
+export class RecognitionError extends ScnnrError {
+  constructor({ title, detail, type }, recognition) {
+    const message = buildMessage(title, detail, type)
+    super(message)
+    this.name = 'RecognitionError'
+    Object.assign(this, { title, detail, type, recognition })
   }
 }

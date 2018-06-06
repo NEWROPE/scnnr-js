@@ -1,7 +1,9 @@
 import defaults from './Client/defaults'
 import Connection from './Connection'
 import Recognition from './Recognition'
-import { PreconditionFailed } from './errors'
+import { PreconditionFailed, RecognitionError } from './errors'
+import poll from './polling'
+
 
 function sanitizeAPIKey(key) {
   if (typeof key !== 'string') {
@@ -11,23 +13,56 @@ function sanitizeAPIKey(key) {
   return key === '' ? null : key
 }
 
+function getTimeoutLength(timeout = 0, timeoutMaxAllowed) {
+  return (timeout - timeoutMaxAllowed) < 0 ? timeout : timeoutMaxAllowed
+}
+
 export default class Client {
   constructor(config) {
     this.config = Object.assign({}, defaults, config)
   }
 
   recognizeURL(url, options = {}) {
-    return this.connection(true, options)
-      .sendJson('/remote/recognitions', { url })
-      .then(this.handleResponse)
+    return this.recognizeRequest(
+      (options) => this.connection(true, options).sendJson('/remote/recognitions', { url }),
+      options
+    )
   }
 
   recognizeImage(data, options = {}) {
-    const params = {}
-    if (options.public) { params.public = true }
-    return this.connection(true, Object.assign({}, options, { params }))
-      .sendBinary('/recognitions', data)
-      .then(this.handleResponse)
+    const params = { public: options.public }
+    const fullOptions = Object.assign({}, options, { params })
+
+    return this.recognizeRequest(
+      (options) => this.connection(true, options).sendBinary('/recognitions', data),
+      fullOptions
+    )
+  }
+
+  // Takes a request and timeout and checks if the recognize request
+  // should start the polling process and calls poll if positive
+  recognizeRequest(requestFunc, options) {
+    const timeoutForFirstRequest = getTimeoutLength(options.timeout, 25)
+    const opt = Object.assign({}, options, { timeout: timeoutForFirstRequest })
+    const request = requestFunc(opt)
+
+    return new Promise((resolve, reject) => {
+      request
+        .then(this.handleResponse)
+        .then(recognition => {
+          if ((options.timeout || 0) > 0 && !recognition.isFinished()) {
+            return poll({
+              requestFunc: (options) => this.fetch(recognition.id, options),
+              conditionChecker: (recognition) => recognition.isFinished(),
+              remainingTime: options.timeout - timeoutForFirstRequest, 
+            })
+          }
+
+          return resolve(recognition)
+        })
+        .then(resolve)
+        .catch(reject)
+    })
   }
 
   fetch(id, options = {}) {
@@ -36,7 +71,15 @@ export default class Client {
       .then(this.handleResponse)
   }
 
-  handleResponse(response) { return new Recognition(response.data) }
+  handleResponse(response) {
+    const recognition = new Recognition(response.data)
+
+    if (recognition.hasError()) {
+      throw new RecognitionError(recognition.error, recognition)
+    }
+
+    return recognition
+  }
 
   connection(useAPIKey, options) {
     return new Connection(this.connectionConfig(useAPIKey, options))
