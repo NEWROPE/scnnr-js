@@ -236,6 +236,7 @@ var PublicKeySigner = function (_BaseSigner) {
     _this.publicAPIKey = publicAPIKey;
     _this.options = options;
     _this.interceptRequest = _this.interceptRequest.bind(_this);
+    _this.marginToExpire = 0.05; // a margin to prevent unexpected expiration (5% of the time)
     return _this;
   }
 
@@ -248,11 +249,44 @@ var PublicKeySigner = function (_BaseSigner) {
       });
     }
   }, {
+    key: 'getOneTimeToken',
+    value: function getOneTimeToken() {
+      var _this2 = this;
+
+      return this.retrieveOneTimeToken().then(function () {
+        var token = _this2.oneTimeToken;
+        delete _this2.oneTimeToken;
+        return token;
+      });
+    }
+  }, {
     key: 'retrieveOneTimeToken',
     value: function retrieveOneTimeToken() {
+      var _this3 = this;
+
+      if (this.oneTimeToken != null) {
+        return Promise.resolve();
+      }
+      return this.issueOneTimeToken().then(function (data) {
+        return _this3.storeOneTimeToken(data);
+      });
+    }
+  }, {
+    key: 'issueOneTimeToken',
+    value: function issueOneTimeToken() {
       return Connection.build(true, Object.assign({ apiKey: this.publicAPIKey }, this.options)).sendJson('/auth/tokens', { type: 'one-time' }).then(function (response) {
         return response.data;
       });
+    }
+  }, {
+    key: 'storeOneTimeToken',
+    value: function storeOneTimeToken(data) {
+      var _this4 = this;
+
+      setTimeout(function () {
+        delete _this4.oneTimeToken;
+      }, data.expires_in * (1 - this.marginToExpire) * 1000);
+      this.oneTimeToken = data.value;
     }
   }]);
   return PublicKeySigner;

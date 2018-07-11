@@ -7,6 +7,7 @@ export default class PublicKeySigner extends BaseSigner {
     this.publicAPIKey = publicAPIKey
     this.options = options
     this.interceptRequest = this.interceptRequest.bind(this)
+    this.marginToExpire = 0.05 // a margin to prevent unexpected expiration (5% of the time)
   }
 
   interceptRequest(config) {
@@ -16,9 +17,31 @@ export default class PublicKeySigner extends BaseSigner {
     })
   }
 
+  getOneTimeToken() {
+    return this.retrieveOneTimeToken()
+      .then(() => {
+        const token = this.oneTimeToken
+        delete this.oneTimeToken
+        return token
+      })
+  }
+
   retrieveOneTimeToken() {
+    if (this.oneTimeToken != null) {
+      return Promise.resolve()
+    }
+    return this.issueOneTimeToken()
+      .then(data => this.storeOneTimeToken(data))
+  }
+
+  issueOneTimeToken() {
     return Connection.build(true, Object.assign({ apiKey: this.publicAPIKey }, this.options))
       .sendJson('/auth/tokens', { type: 'one-time' })
       .then(response => response.data)
+  }
+
+  storeOneTimeToken(data) {
+    setTimeout(() => { delete this.oneTimeToken }, data.expires_in * (1 - this.marginToExpire) * 1000)
+    this.oneTimeToken = data.value
   }
 }
