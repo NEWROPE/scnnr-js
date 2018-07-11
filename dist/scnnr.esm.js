@@ -243,9 +243,10 @@ var PublicKeySigner = function (_BaseSigner) {
   createClass(PublicKeySigner, [{
     key: 'interceptRequest',
     value: function interceptRequest(config) {
-      return new Promise(function (resolve, reject) {
-        // TODO: implement
-        resolve(config);
+      return this.getOneTimeToken().then(function (token) {
+        config.headers['x-api-key'] = 'use-scnnr-one-time-token';
+        config.headers['x-scnnr-one-time-token'] = token;
+        return config;
       });
     }
   }, {
@@ -274,7 +275,7 @@ var PublicKeySigner = function (_BaseSigner) {
   }, {
     key: 'issueOneTimeToken',
     value: function issueOneTimeToken() {
-      return Connection.build(true, Object.assign({ apiKey: this.publicAPIKey }, this.options)).sendJson('/auth/tokens', { type: 'one-time' }).then(function (response) {
+      return Connection.build(true, Object.assign({}, this.options, { apiKey: this.publicAPIKey })).sendJson('/auth/tokens', { type: 'one-time' }).then(function (response) {
         return response.data;
       });
     }
@@ -306,7 +307,7 @@ function signer(config) {
   if (apiKey != null) {
     return new PrivateKeySigner(apiKey);
   } else if (publicAPIKey != null) {
-    return new PublicKeySigner(apiKey, { url: config.url, version: config.version });
+    return new PublicKeySigner(publicAPIKey, { url: config.url, version: config.version });
   } else {
     throw new PreconditionFailed('`apiKey` or `publicAPIKey` configuration is required.');
   }

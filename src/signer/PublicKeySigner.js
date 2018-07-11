@@ -11,10 +11,12 @@ export default class PublicKeySigner extends BaseSigner {
   }
 
   interceptRequest(config) {
-    return new Promise((resolve, reject) => {
-      // TODO: implement
-      resolve(config)
-    })
+    return this.getOneTimeToken()
+      .then(token => {
+        config.headers['x-api-key'] = 'use-scnnr-one-time-token'
+        config.headers['x-scnnr-one-time-token'] = token
+        return config
+      })
   }
 
   getOneTimeToken() {
@@ -35,7 +37,7 @@ export default class PublicKeySigner extends BaseSigner {
   }
 
   issueOneTimeToken() {
-    return Connection.build(true, Object.assign({ apiKey: this.publicAPIKey }, this.options))
+    return Connection.build(true, Object.assign({}, this.options, { apiKey: this.publicAPIKey }))
       .sendJson('/auth/tokens', { type: 'one-time' })
       .then(response => response.data)
   }

@@ -21,7 +21,7 @@ export default function signer(config) {
   if (apiKey != null) {
     return new PrivateKeySigner(apiKey)
   } else if (publicAPIKey != null) {
-    return new PublicKeySigner(apiKey, { url: config.url, version: config.version })
+    return new PublicKeySigner(publicAPIKey, { url: config.url, version: config.version })
   } else {
     throw new PreconditionFailed('`apiKey` or `publicAPIKey` configuration is required.')
   }
