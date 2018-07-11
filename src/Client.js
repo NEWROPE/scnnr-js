@@ -1,7 +1,6 @@
 import defaults from './Client/defaults'
 import Connection from './Connection'
 import Recognition from './Recognition'
-import signer from './signer'
 import { RecognitionError } from './errors'
 import poll from './polling'
 
@@ -73,20 +72,7 @@ export default class Client {
     return recognition
   }
 
-  connection(useAPIKey, options) {
-    return new Connection(this.connectionConfig(useAPIKey, options))
-  }
-
-  connectionConfig(useAPIKey, options) {
-    const config = Object.assign({}, this.config, options)
-    const params = options.params || {}
-    if ((config.timeout || 0) > 0) { params.timeout = config.timeout }
-    return {
-      params,
-      signer: useAPIKey ? signer(config.apiKey) : null,
-      url: config.url + config.version,
-      onUploadProgress: config.onUploadProgress,
-      onDownloadProgress: config.onDownloadProgress,
-    }
+  connection(needSign, options) {
+    return Connection.build(needSign, Object.assign({}, this.config, options))
   }
 }

@@ -15,13 +15,13 @@ function sanitizeAPIKey(key) {
   return key === '' ? null : key
 }
 
-export default function signer(apiKey, publicAPIKey) {
-  apiKey = sanitizeAPIKey(apiKey)
-  publicAPIKey = sanitizeAPIKey(publicAPIKey)
+export default function signer(config) {
+  const apiKey = sanitizeAPIKey(config.apiKey)
+  const publicAPIKey = sanitizeAPIKey(config.publicAPIKey)
   if (apiKey != null) {
     return new PrivateKeySigner(apiKey)
   } else if (publicAPIKey != null) {
-    return new PublicKeySigner(apiKey)
+    return new PublicKeySigner(apiKey, { url: config.url, version: config.version })
   } else {
     throw new PreconditionFailed('`apiKey` or `publicAPIKey` configuration is required.')
   }

@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 import { ScnnrAPIError } from './errors'
+import signer from './signer'
 
 export default class Connection {
   constructor({ url, apiKey, params, signer, onUploadProgress, onDownloadProgress }) {
@@ -44,5 +45,17 @@ export default class Connection {
       rawResponse: err.response.data,
       statusCode: err.response.status,
     }))
+  }
+
+  static build(needSign, config) {
+    const params = config.params || {}
+    if ((config.timeout || 0) > 0) { params.timeout = config.timeout }
+    return new Connection({
+      params,
+      signer: needSign ? signer(config) : null,
+      url: config.url + config.version,
+      onUploadProgress: config.onUploadProgress,
+      onDownloadProgress: config.onDownloadProgress,
+    })
   }
 }

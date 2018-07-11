@@ -198,12 +198,96 @@ var errors = Object.freeze({
 	RecognitionError: RecognitionError
 });
 
+var BaseSigner = function BaseSigner() {
+  classCallCheck(this, BaseSigner);
+};
+
+var PrivateKeySigner = function (_BaseSigner) {
+  inherits(PrivateKeySigner, _BaseSigner);
+
+  function PrivateKeySigner(apiKey) {
+    classCallCheck(this, PrivateKeySigner);
+
+    var _this = possibleConstructorReturn(this, (PrivateKeySigner.__proto__ || Object.getPrototypeOf(PrivateKeySigner)).call(this));
+
+    _this.apiKey = apiKey;
+    _this.interceptRequest = _this.interceptRequest.bind(_this);
+    return _this;
+  }
+
+  createClass(PrivateKeySigner, [{
+    key: 'interceptRequest',
+    value: function interceptRequest(config) {
+      var _this2 = this;
+
+      return new Promise(function (resolve, reject) {
+        config.headers['x-api-key'] = _this2.apiKey;
+        resolve(config);
+      });
+    }
+  }]);
+  return PrivateKeySigner;
+}(BaseSigner);
+
+var PublicKeySigner = function (_BaseSigner) {
+  inherits(PublicKeySigner, _BaseSigner);
+
+  function PublicKeySigner(publicAPIKey, options) {
+    classCallCheck(this, PublicKeySigner);
+
+    var _this = possibleConstructorReturn(this, (PublicKeySigner.__proto__ || Object.getPrototypeOf(PublicKeySigner)).call(this));
+
+    _this.publicAPIKey = publicAPIKey;
+    _this.options = options;
+    _this.interceptRequest = _this.interceptRequest.bind(_this);
+    return _this;
+  }
+
+  createClass(PublicKeySigner, [{
+    key: 'interceptRequest',
+    value: function interceptRequest(config) {
+      return new Promise(function (resolve, reject) {
+        // TODO: implement
+        resolve(config);
+      });
+    }
+  }, {
+    key: 'retrieveOneTimeToken',
+    value: function retrieveOneTimeToken() {
+      return Connection.build(true, Object.assign({ apiKey: this.publicAPIKey }, this.options)).sendJson('/auth/tokens', { type: 'one-time' }).then(function (response) {
+        return response.data;
+      });
+    }
+  }]);
+  return PublicKeySigner;
+}(BaseSigner);
+
+function sanitizeAPIKey(key) {
+  if (typeof key !== 'string') {
+    return null;
+  }
+  key = key.replace(/^\s*/, '').replace(/\s*$/, '');
+  return key === '' ? null : key;
+}
+
+function signer(config) {
+  var apiKey = sanitizeAPIKey(config.apiKey);
+  var publicAPIKey = sanitizeAPIKey(config.publicAPIKey);
+  if (apiKey != null) {
+    return new PrivateKeySigner(apiKey);
+  } else if (publicAPIKey != null) {
+    return new PublicKeySigner(apiKey, { url: config.url, version: config.version });
+  } else {
+    throw new PreconditionFailed('`apiKey` or `publicAPIKey` configuration is required.');
+  }
+}
+
 var Connection = function () {
   function Connection(_ref) {
     var url = _ref.url,
         apiKey = _ref.apiKey,
         params = _ref.params,
-        signer = _ref.signer,
+        signer$$1 = _ref.signer,
         onUploadProgress = _ref.onUploadProgress,
         onDownloadProgress = _ref.onDownloadProgress;
     classCallCheck(this, Connection);
@@ -224,8 +308,8 @@ var Connection = function () {
       return response;
     }, this.errorInterceptor);
 
-    if (signer != null) {
-      this.httpClient.interceptors.request.use(signer.interceptRequest);
+    if (signer$$1 != null) {
+      this.httpClient.interceptors.request.use(signer$$1.interceptRequest);
     }
   }
 
@@ -266,6 +350,21 @@ var Connection = function () {
         rawResponse: err.response.data,
         statusCode: err.response.status
       }));
+    }
+  }], [{
+    key: 'build',
+    value: function build(needSign, config) {
+      var params = config.params || {};
+      if ((config.timeout || 0) > 0) {
+        params.timeout = config.timeout;
+      }
+      return new Connection({
+        params: params,
+        signer: needSign ? signer(config) : null,
+        url: config.url + config.version,
+        onUploadProgress: config.onUploadProgress,
+        onDownloadProgress: config.onDownloadProgress
+      });
     }
   }]);
   return Connection;
@@ -335,82 +434,6 @@ var Recognition = function () {
 
 Recognition.Item = Item;
 Recognition.Image = Image;
-
-var BaseSigner = function BaseSigner() {
-  classCallCheck(this, BaseSigner);
-};
-
-var PrivateKeySigner = function (_BaseSigner) {
-  inherits(PrivateKeySigner, _BaseSigner);
-
-  function PrivateKeySigner(apiKey) {
-    classCallCheck(this, PrivateKeySigner);
-
-    var _this = possibleConstructorReturn(this, (PrivateKeySigner.__proto__ || Object.getPrototypeOf(PrivateKeySigner)).call(this));
-
-    _this.apiKey = apiKey;
-    _this.interceptRequest = _this.interceptRequest.bind(_this);
-    return _this;
-  }
-
-  createClass(PrivateKeySigner, [{
-    key: 'interceptRequest',
-    value: function interceptRequest(config) {
-      var _this2 = this;
-
-      return new Promise(function (resolve, reject) {
-        config.headers['x-api-key'] = _this2.apiKey;
-        resolve(config);
-      });
-    }
-  }]);
-  return PrivateKeySigner;
-}(BaseSigner);
-
-var PublicKeySigner = function (_BaseSigner) {
-  inherits(PublicKeySigner, _BaseSigner);
-
-  function PublicKeySigner(publicAPIKey) {
-    classCallCheck(this, PublicKeySigner);
-
-    var _this = possibleConstructorReturn(this, (PublicKeySigner.__proto__ || Object.getPrototypeOf(PublicKeySigner)).call(this));
-
-    _this.publicAPIKey = publicAPIKey;
-    _this.interceptRequest = _this.interceptRequest.bind(_this);
-    return _this;
-  }
-
-  createClass(PublicKeySigner, [{
-    key: 'interceptRequest',
-    value: function interceptRequest(config) {
-      return new Promise(function (resolve, reject) {
-        // TODO: implement
-        resolve(config);
-      });
-    }
-  }]);
-  return PublicKeySigner;
-}(BaseSigner);
-
-function sanitizeAPIKey(key) {
-  if (typeof key !== 'string') {
-    return null;
-  }
-  key = key.replace(/^\s*/, '').replace(/\s*$/, '');
-  return key === '' ? null : key;
-}
-
-function signer(apiKey, publicAPIKey) {
-  apiKey = sanitizeAPIKey(apiKey);
-  publicAPIKey = sanitizeAPIKey(publicAPIKey);
-  if (apiKey != null) {
-    return new PrivateKeySigner(apiKey);
-  } else if (publicAPIKey != null) {
-    return new PublicKeySigner(apiKey);
-  } else {
-    throw new PreconditionFailed('`apiKey` or `publicAPIKey` configuration is required.');
-  }
-}
 
 function poll(config) {
   var _this = this;
@@ -534,24 +557,8 @@ var Client = function () {
     }
   }, {
     key: 'connection',
-    value: function connection(useAPIKey, options) {
-      return new Connection(this.connectionConfig(useAPIKey, options));
-    }
-  }, {
-    key: 'connectionConfig',
-    value: function connectionConfig(useAPIKey, options) {
-      var config = Object.assign({}, this.config, options);
-      var params = options.params || {};
-      if ((config.timeout || 0) > 0) {
-        params.timeout = config.timeout;
-      }
-      return {
-        params: params,
-        signer: useAPIKey ? signer(config.apiKey) : null,
-        url: config.url + config.version,
-        onUploadProgress: config.onUploadProgress,
-        onDownloadProgress: config.onDownloadProgress
-      };
+    value: function connection(needSign, options) {
+      return Connection.build(needSign, Object.assign({}, this.config, options));
     }
   }]);
   return Client;
