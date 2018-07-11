@@ -28,7 +28,16 @@ describe('PublicKeyAuthInterceptor', () => {
   })
 
   describe('interceptRequest', () => {
-    xit('sets x-api-key header')
+    it('sets x-api-key and x-scnnr-one-time-token headers', () => {
+      const config = { headers: {} }
+      const interceptor = getInterceptor()
+      interceptor.storeOneTimeToken(tokenResponseBody)
+      return interceptor.interceptRequest(config)
+        .then(config => {
+          expect(config.headers['x-api-key']).to.equal('use-scnnr-one-time-token')
+          expect(config.headers['x-scnnr-one-time-token']).to.equal(oneTimeToken)
+        })
+    })
   })
 
   describe('getOneTimeToken', () => {
