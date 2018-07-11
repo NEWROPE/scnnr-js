@@ -203,6 +203,7 @@ var Connection = function () {
     var url = _ref.url,
         apiKey = _ref.apiKey,
         params = _ref.params,
+        signer = _ref.signer,
         onUploadProgress = _ref.onUploadProgress,
         onDownloadProgress = _ref.onDownloadProgress;
     classCallCheck(this, Connection);
@@ -222,6 +223,10 @@ var Connection = function () {
     this.httpClient.interceptors.response.use(function (response) {
       return response;
     }, this.errorInterceptor);
+
+    if (signer != null) {
+      this.httpClient.interceptors.request.use(signer.interceptRequest);
+    }
   }
 
   createClass(Connection, [{
@@ -331,6 +336,39 @@ var Recognition = function () {
 Recognition.Item = Item;
 Recognition.Image = Image;
 
+function sanitizeAPIKey(key) {
+  if (typeof key !== 'string') {
+    return null;
+  }
+  key = key.replace(/^\s*/, '').replace(/\s*$/, '');
+  return key === '' ? null : key;
+}
+
+var Signer = function () {
+  function Signer(apiKey) {
+    classCallCheck(this, Signer);
+
+    this.apiKey = sanitizeAPIKey(apiKey);
+    if (this.apiKey == null) {
+      throw new PreconditionFailed('`apiKey` configuration is required.');
+    }
+    this.interceptRequest = this.interceptRequest.bind(this);
+  }
+
+  createClass(Signer, [{
+    key: 'interceptRequest',
+    value: function interceptRequest(config) {
+      var _this = this;
+
+      return new Promise(function (resolve, reject) {
+        config.headers['x-api-key'] = _this.apiKey;
+        resolve(config);
+      });
+    }
+  }]);
+  return Signer;
+}();
+
 function poll(config) {
   var _this = this;
 
@@ -361,14 +399,6 @@ function poll(config) {
       return resolve(poll.call(_this, newConfig));
     });
   });
-}
-
-function sanitizeAPIKey(key) {
-  if (typeof key !== 'string') {
-    return null;
-  }
-  key = key.replace(/^\s*/, '').replace(/\s*$/, '');
-  return key === '' ? null : key;
 }
 
 function getTimeoutLength() {
@@ -468,16 +498,13 @@ var Client = function () {
     key: 'connectionConfig',
     value: function connectionConfig(useAPIKey, options) {
       var config = Object.assign({}, this.config, options);
-      var apiKey = sanitizeAPIKey(config.apiKey);
-      if (useAPIKey && apiKey == null) {
-        throw new PreconditionFailed('`apiKey` configuration is required.');
-      }
       var params = options.params || {};
       if ((config.timeout || 0) > 0) {
         params.timeout = config.timeout;
       }
       return {
-        apiKey: apiKey, params: params,
+        params: params,
+        signer: useAPIKey ? new Signer(config.apiKey) : null,
         url: config.url + config.version,
         onUploadProgress: config.onUploadProgress,
         onDownloadProgress: config.onDownloadProgress
@@ -494,7 +521,8 @@ function client(options) {
 var index = Object.assign(client, {
   Client: Client,
   Connection: Connection,
-  Recognition: Recognition
+  Recognition: Recognition,
+  Signer: Signer
 }, errors);
 
 module.exports = index;

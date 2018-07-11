@@ -1,17 +1,9 @@
 import defaults from './Client/defaults'
 import Connection from './Connection'
 import Recognition from './Recognition'
-import { PreconditionFailed, RecognitionError } from './errors'
+import Signer from './Signer'
+import { RecognitionError } from './errors'
 import poll from './polling'
-
-
-function sanitizeAPIKey(key) {
-  if (typeof key !== 'string') {
-    return null
-  }
-  key = key.replace(/^\s*/, '').replace(/\s*$/, '')
-  return key === '' ? null : key
-}
 
 function getTimeoutLength(timeout = 0, timeoutMaxAllowed) {
   return (timeout - timeoutMaxAllowed) < 0 ? timeout : timeoutMaxAllowed
@@ -87,14 +79,11 @@ export default class Client {
 
   connectionConfig(useAPIKey, options) {
     const config = Object.assign({}, this.config, options)
-    const apiKey = sanitizeAPIKey(config.apiKey)
-    if (useAPIKey && apiKey == null) {
-      throw new PreconditionFailed('`apiKey` configuration is required.')
-    }
     const params = options.params || {}
     if ((config.timeout || 0) > 0) { params.timeout = config.timeout }
     return {
-      apiKey, params,
+      params,
+      signer: useAPIKey ? new Signer(config.apiKey) : null,
       url: config.url + config.version,
       onUploadProgress: config.onUploadProgress,
       onDownloadProgress: config.onDownloadProgress,

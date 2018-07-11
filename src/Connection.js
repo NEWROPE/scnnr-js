@@ -3,7 +3,7 @@ import axios from 'axios'
 import { ScnnrAPIError } from './errors'
 
 export default class Connection {
-  constructor({ url, apiKey, params, onUploadProgress, onDownloadProgress }) {
+  constructor({ url, apiKey, params, signer, onUploadProgress, onDownloadProgress }) {
     const headers = {}
     if (apiKey) { headers['x-api-key'] = apiKey }
 
@@ -15,6 +15,8 @@ export default class Connection {
     })
 
     this.httpClient.interceptors.response.use(response => response, this.errorInterceptor)
+
+    if (signer != null) { this.httpClient.interceptors.request.use(signer.interceptRequest) }
   }
 
   get(path) { return this.httpClient.get(path, null) }
