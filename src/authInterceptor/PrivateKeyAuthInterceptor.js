@@ -1,10 +1,9 @@
-import BaseSigner from './BaseSigner'
+import AuthInterceptor from './AuthInterceptor'
 
-export default class PrivateKeySigner extends BaseSigner {
+export default class PrivateKeyAuthInterceptor extends AuthInterceptor {
   constructor(apiKey) {
     super()
     this.apiKey = apiKey
-    this.interceptRequest = this.interceptRequest.bind(this)
   }
 
   interceptRequest(config) {

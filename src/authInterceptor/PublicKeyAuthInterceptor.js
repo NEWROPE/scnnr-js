@@ -1,12 +1,11 @@
 import Connection from '../Connection'
-import BaseSigner from './BaseSigner'
+import AuthInterceptor from './AuthInterceptor'
 
-export default class PublicKeySigner extends BaseSigner {
+export default class PublicKeyAuthInterceptor extends AuthInterceptor {
   constructor(publicAPIKey, options) {
     super()
     this.publicAPIKey = publicAPIKey
     this.options = options
-    this.interceptRequest = this.interceptRequest.bind(this)
     this.marginToExpire = 0.05 // a margin to prevent unexpected expiration (5% of the time)
   }
 

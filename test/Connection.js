@@ -27,18 +27,19 @@ describe('Connection', () => {
   describe('constructor', () => {
     const requestPath = '/recognitions/some/recognition-id'
 
-    context('when a signer is pass', () => {
-      const signer = scnnr.signer(config)
+    context('when an authInterceptor is pass', () => {
+      const authInterceptor = scnnr.authInterceptor(config)
 
-      it('registers a request interceptor', () => {
-        const connection = getConnection(Object.assign({ signer }, config))
+      it('registers it for requests', () => {
+        const connection = getConnection(Object.assign({ authInterceptor }, config))
         expect(connection.httpClient.interceptors.request.handlers.length).to.equal(1)
-        expect(connection.httpClient.interceptors.request.handlers[0].fulfilled).to.equal(signer.interceptRequest)
+        expect(connection.httpClient.interceptors.request.handlers[0].fulfilled)
+          .to.equal(authInterceptor.interceptRequest)
       })
     })
 
-    context('when a signer does not pass', () => {
-      it('registers a request interceptor', () => {
+    context('when an authInterceptor does not pass', () => {
+      it('does not register any intercepter for requests', () => {
         expect(getConnection().httpClient.interceptors.request.handlers).is.empty
       })
     })

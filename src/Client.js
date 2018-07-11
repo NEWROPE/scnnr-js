@@ -72,7 +72,7 @@ export default class Client {
     return recognition
   }
 
-  connection(needSign, options) {
-    return Connection.build(needSign, Object.assign({}, this.config, options))
+  connection(needAuth, options) {
+    return Connection.build(needAuth, Object.assign({}, this.config, options))
   }
 }

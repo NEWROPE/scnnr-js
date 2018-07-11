@@ -1,10 +1,10 @@
 import axios from 'axios'
 
 import { ScnnrAPIError } from './errors'
-import signer from './signer'
+import authInterceptor from './authInterceptor'
 
 export default class Connection {
-  constructor({ url, apiKey, params, signer, onUploadProgress, onDownloadProgress }) {
+  constructor({ url, apiKey, params, authInterceptor, onUploadProgress, onDownloadProgress }) {
     const headers = {}
     if (apiKey) { headers['x-api-key'] = apiKey }
 
@@ -17,7 +17,7 @@ export default class Connection {
 
     this.httpClient.interceptors.response.use(response => response, this.errorInterceptor)
 
-    if (signer != null) { this.httpClient.interceptors.request.use(signer.interceptRequest) }
+    if (authInterceptor != null) { this.httpClient.interceptors.request.use(authInterceptor.interceptRequest) }
   }
 
   get(path) { return this.httpClient.get(path, null) }
@@ -47,12 +47,12 @@ export default class Connection {
     }))
   }
 
-  static build(needSign, config) {
+  static build(needAuth, config) {
     const params = config.params || {}
     if ((config.timeout || 0) > 0) { params.timeout = config.timeout }
     return new Connection({
       params,
-      signer: needSign ? signer(config) : null,
+      authInterceptor: needAuth ? authInterceptor(config) : null,
       url: config.url + config.version,
       onUploadProgress: config.onUploadProgress,
       onDownloadProgress: config.onDownloadProgress,

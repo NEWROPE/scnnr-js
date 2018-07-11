@@ -1,10 +1,10 @@
-import PrivateKeySigner from './PrivateKeySigner'
-import PublicKeySigner from './PublicKeySigner'
+import PrivateKeyAuthInterceptor from './PrivateKeyAuthInterceptor'
+import PublicKeyAuthInterceptor from './PublicKeyAuthInterceptor'
 import { PreconditionFailed } from '../errors'
 
 export {
-  PrivateKeySigner,
-  PublicKeySigner,
+  PrivateKeyAuthInterceptor,
+  PublicKeyAuthInterceptor,
 }
 
 function sanitizeAPIKey(key) {
@@ -15,13 +15,13 @@ function sanitizeAPIKey(key) {
   return key === '' ? null : key
 }
 
-export default function signer(config) {
+export default function authInterceptor(config) {
   const apiKey = sanitizeAPIKey(config.apiKey)
   const publicAPIKey = sanitizeAPIKey(config.publicAPIKey)
   if (apiKey != null) {
-    return new PrivateKeySigner(apiKey)
+    return new PrivateKeyAuthInterceptor(apiKey)
   } else if (publicAPIKey != null) {
-    return new PublicKeySigner(publicAPIKey, { url: config.url, version: config.version })
+    return new PublicKeyAuthInterceptor(publicAPIKey, { url: config.url, version: config.version })
   } else {
     throw new PreconditionFailed('`apiKey` or `publicAPIKey` configuration is required.')
   }
