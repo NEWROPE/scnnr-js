@@ -27,7 +27,7 @@ describe('Client', () => {
 
     if (needsAPIKey) {
       it('needs apiKey', () => {
-        expect(() => sendRequest({ apiKey: null })).to.throw('`apiKey` configuration is required.')
+        expect(() => sendRequest({ apiKey: null })).to.throw('`apiKey` or `publicAPIKey` configuration is required.')
       })
     } else {
       it('does not need apiKey', () => {

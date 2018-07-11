@@ -1,15 +1,15 @@
 import BaseSigner from './BaseSigner'
 
-export default class PrivateKeySigner extends BaseSigner {
-  constructor(apiKey) {
+export default class PublicKeySigner extends BaseSigner {
+  constructor(publicAPIKey) {
     super()
-    this.apiKey = apiKey
+    this.publicAPIKey = publicAPIKey
     this.interceptRequest = this.interceptRequest.bind(this)
   }
 
   interceptRequest(config) {
     return new Promise((resolve, reject) => {
-      config.headers['x-api-key'] = this.apiKey
+      // TODO: implement
       resolve(config)
     })
   }

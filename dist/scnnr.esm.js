@@ -336,14 +336,6 @@ var BaseSigner = function BaseSigner() {
   classCallCheck(this, BaseSigner);
 };
 
-function sanitizeAPIKey(key) {
-  if (typeof key !== 'string') {
-    return null;
-  }
-  key = key.replace(/^\s*/, '').replace(/\s*$/, '');
-  return key === '' ? null : key;
-}
-
 var PrivateKeySigner = function (_BaseSigner) {
   inherits(PrivateKeySigner, _BaseSigner);
 
@@ -352,10 +344,7 @@ var PrivateKeySigner = function (_BaseSigner) {
 
     var _this = possibleConstructorReturn(this, (PrivateKeySigner.__proto__ || Object.getPrototypeOf(PrivateKeySigner)).call(this));
 
-    _this.apiKey = sanitizeAPIKey(apiKey);
-    if (_this.apiKey == null) {
-      throw new PreconditionFailed('`apiKey` configuration is required.');
-    }
+    _this.apiKey = apiKey;
     _this.interceptRequest = _this.interceptRequest.bind(_this);
     return _this;
   }
@@ -374,8 +363,49 @@ var PrivateKeySigner = function (_BaseSigner) {
   return PrivateKeySigner;
 }(BaseSigner);
 
-function signer(apiKey) {
-  return new PrivateKeySigner(apiKey);
+var PublicKeySigner = function (_BaseSigner) {
+  inherits(PublicKeySigner, _BaseSigner);
+
+  function PublicKeySigner(publicAPIKey) {
+    classCallCheck(this, PublicKeySigner);
+
+    var _this = possibleConstructorReturn(this, (PublicKeySigner.__proto__ || Object.getPrototypeOf(PublicKeySigner)).call(this));
+
+    _this.publicAPIKey = publicAPIKey;
+    _this.interceptRequest = _this.interceptRequest.bind(_this);
+    return _this;
+  }
+
+  createClass(PublicKeySigner, [{
+    key: 'interceptRequest',
+    value: function interceptRequest(config) {
+      return new Promise(function (resolve, reject) {
+        // TODO: implement
+        resolve(config);
+      });
+    }
+  }]);
+  return PublicKeySigner;
+}(BaseSigner);
+
+function sanitizeAPIKey(key) {
+  if (typeof key !== 'string') {
+    return null;
+  }
+  key = key.replace(/^\s*/, '').replace(/\s*$/, '');
+  return key === '' ? null : key;
+}
+
+function signer(apiKey, publicAPIKey) {
+  apiKey = sanitizeAPIKey(apiKey);
+  publicAPIKey = sanitizeAPIKey(publicAPIKey);
+  if (apiKey != null) {
+    return new PrivateKeySigner(apiKey);
+  } else if (publicAPIKey != null) {
+    return new PublicKeySigner(apiKey);
+  } else {
+    throw new PreconditionFailed('`apiKey` or `publicAPIKey` configuration is required.');
+  }
 }
 
 function poll(config) {
@@ -532,6 +562,7 @@ var index = Object.assign(client, {
   Connection: Connection,
   Recognition: Recognition,
   PrivateKeySigner: PrivateKeySigner,
+  PublicKeySigner: PublicKeySigner,
   signer: signer
 }, errors);
 
