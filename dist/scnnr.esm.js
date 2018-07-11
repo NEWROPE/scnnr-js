@@ -332,6 +332,10 @@ var Recognition = function () {
 Recognition.Item = Item;
 Recognition.Image = Image;
 
+var BaseSigner = function BaseSigner() {
+  classCallCheck(this, BaseSigner);
+};
+
 function sanitizeAPIKey(key) {
   if (typeof key !== 'string') {
     return null;
@@ -340,30 +344,39 @@ function sanitizeAPIKey(key) {
   return key === '' ? null : key;
 }
 
-var Signer = function () {
-  function Signer(apiKey) {
-    classCallCheck(this, Signer);
+var PrivateKeySigner = function (_BaseSigner) {
+  inherits(PrivateKeySigner, _BaseSigner);
 
-    this.apiKey = sanitizeAPIKey(apiKey);
-    if (this.apiKey == null) {
+  function PrivateKeySigner(apiKey) {
+    classCallCheck(this, PrivateKeySigner);
+
+    var _this = possibleConstructorReturn(this, (PrivateKeySigner.__proto__ || Object.getPrototypeOf(PrivateKeySigner)).call(this));
+
+    _this.apiKey = sanitizeAPIKey(apiKey);
+    if (_this.apiKey == null) {
       throw new PreconditionFailed('`apiKey` configuration is required.');
     }
-    this.interceptRequest = this.interceptRequest.bind(this);
+    _this.interceptRequest = _this.interceptRequest.bind(_this);
+    return _this;
   }
 
-  createClass(Signer, [{
+  createClass(PrivateKeySigner, [{
     key: 'interceptRequest',
     value: function interceptRequest(config) {
-      var _this = this;
+      var _this2 = this;
 
       return new Promise(function (resolve, reject) {
-        config.headers['x-api-key'] = _this.apiKey;
+        config.headers['x-api-key'] = _this2.apiKey;
         resolve(config);
       });
     }
   }]);
-  return Signer;
-}();
+  return PrivateKeySigner;
+}(BaseSigner);
+
+function signer(apiKey) {
+  return new PrivateKeySigner(apiKey);
+}
 
 function poll(config) {
   var _this = this;
@@ -500,7 +513,7 @@ var Client = function () {
       }
       return {
         params: params,
-        signer: useAPIKey ? new Signer(config.apiKey) : null,
+        signer: useAPIKey ? signer(config.apiKey) : null,
         url: config.url + config.version,
         onUploadProgress: config.onUploadProgress,
         onDownloadProgress: config.onDownloadProgress
@@ -518,7 +531,8 @@ var index = Object.assign(client, {
   Client: Client,
   Connection: Connection,
   Recognition: Recognition,
-  Signer: Signer
+  PrivateKeySigner: PrivateKeySigner,
+  signer: signer
 }, errors);
 
 export default index;

@@ -1,4 +1,5 @@
-import { PreconditionFailed } from './errors'
+import BaseSigner from './BaseSigner'
+import { PreconditionFailed } from '../errors'
 
 function sanitizeAPIKey(key) {
   if (typeof key !== 'string') {
@@ -8,8 +9,9 @@ function sanitizeAPIKey(key) {
   return key === '' ? null : key
 }
 
-export default class Signer {
+export default class PrivateKeySigner extends BaseSigner {
   constructor(apiKey) {
+    super()
     this.apiKey = sanitizeAPIKey(apiKey)
     if (this.apiKey == null) {
       throw new PreconditionFailed('`apiKey` configuration is required.')

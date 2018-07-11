@@ -1,10 +1,10 @@
 import { expect } from 'chai'
 
-import scnnr from '../dist/scnnr.esm'
+import scnnr from '../../dist/scnnr.esm'
 
-describe('Signer', () => {
+describe('PrivateKeySigner', () => {
   const apiKey = 'dummy-key'
-  const signer = new scnnr.Signer(apiKey)
+  const signer = new scnnr.PrivateKeySigner(apiKey)
 
   describe('constructor', () => {
     it('should receive an API key', () => {

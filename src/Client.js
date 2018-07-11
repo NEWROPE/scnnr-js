@@ -1,7 +1,7 @@
 import defaults from './Client/defaults'
 import Connection from './Connection'
 import Recognition from './Recognition'
-import Signer from './Signer'
+import signer from './signer'
 import { RecognitionError } from './errors'
 import poll from './polling'
 
@@ -46,7 +46,7 @@ export default class Client {
             return poll({
               requestFunc: (options) => this.fetch(recognition.id, options),
               conditionChecker: (recognition) => recognition.isFinished(),
-              remainingTime: options.timeout - timeoutForFirstRequest, 
+              remainingTime: options.timeout - timeoutForFirstRequest,
             })
           }
 
@@ -83,7 +83,7 @@ export default class Client {
     if ((config.timeout || 0) > 0) { params.timeout = config.timeout }
     return {
       params,
-      signer: useAPIKey ? new Signer(config.apiKey) : null,
+      signer: useAPIKey ? signer(config.apiKey) : null,
       url: config.url + config.version,
       onUploadProgress: config.onUploadProgress,
       onDownloadProgress: config.onDownloadProgress,

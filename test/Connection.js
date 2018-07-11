@@ -28,7 +28,7 @@ describe('Connection', () => {
     const requestPath = '/recognitions/some/recognition-id'
 
     context('when a signer is pass', () => {
-      const signer = new scnnr.Signer(config.apiKey)
+      const signer = scnnr.signer(config.apiKey)
 
       it('registers a request interceptor', () => {
         const connection = getConnection(Object.assign({ signer }, config))
