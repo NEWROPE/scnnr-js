@@ -26,6 +26,17 @@ const client = scnnr({
 })
 ```
 
+Or, you can use a public API key as follows.
+
+```
+import scnnr from 'scnnr'
+const client = scnnr({
+  publicAPIKey: 'YOUR PUBLIC API KEY',
+})
+```
+
+For more details about public API keys, please see [here](https://api.scnnr.cubki.jp/v1/docs#tag/authorization%2Fpaths%2F~1auth~1tokens%2Fpost).
+
 Operations through the client basically return `Promise` instance and the promises will be resolved with a `Recognition` instance.
 
 ## Examples
