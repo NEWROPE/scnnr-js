@@ -5,12 +5,11 @@ import AuthInterceptor from './AuthInterceptor'
 export default class PublicKeyAuthInterceptor extends AuthInterceptor {
   constructor(publicAPIKey, options) {
     super()
-    this.options = Object.assign({}, options, { apiKey: publicAPIKey })
-    this.oneTimeTokenProvider = new OneTimeTokenProvider()
+    this.oneTimeTokenProvider = new OneTimeTokenProvider(publicAPIKey, options)
   }
 
   interceptRequest(config) {
-    return this.oneTimeTokenProvider.get(this.options)
+    return this.oneTimeTokenProvider.get()
       .then(token => {
         config.headers['x-api-key'] = 'use-scnnr-one-time-token'
         config.headers['x-scnnr-one-time-token'] = token

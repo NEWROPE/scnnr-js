@@ -1,13 +1,16 @@
 import Connection from './Connection'
 
 export default class OneTimeTokenProvider {
-  constructor() {
+  constructor(publicAPIKey, options) {
+    this.publicAPIKey = publicAPIKey
+    this.options = options
     this.token = null
+    this.timeout = null
     this.marginToExpire = 0.05 // a margin to prevent unexpected expiration (5% of the time)
   }
 
-  get(options) {
-    return this.retrieve(options)
+  get() {
+    return this.retrieve()
       .then(() => {
         const token = this.token
         this.token = null
@@ -15,22 +18,22 @@ export default class OneTimeTokenProvider {
       })
   }
 
-  retrieve(options) {
+  retrieve() {
     if (this.token != null) {
       return Promise.resolve()
     }
-    return this.issue(options)
+    return this.issue()
       .then(data => this.storeToken(data))
   }
 
-  issue(options) {
-    return Connection.build(true, Object.assign({}, options, { apiKey: options.publicAPIKey }))
+  issue() {
+    return Connection.build(true, Object.assign({}, this.options, { apiKey: this.publicAPIKey }))
       .sendJson('/auth/tokens', { type: 'one-time' })
       .then(response => response.data)
   }
 
   storeToken(data) {
-    setTimeout(() => { this.token = null }, data.expires_in * (1 - this.marginToExpire) * 1000)
+    this.timeout = setTimeout(() => { this.token = null }, data.expires_in * (1 - this.marginToExpire) * 1000)
     this.token = data.value
   }
 }

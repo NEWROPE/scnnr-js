@@ -236,19 +236,22 @@ var PrivateKeyAuthInterceptor = function (_AuthInterceptor) {
 }(AuthInterceptor);
 
 var OneTimeTokenProvider = function () {
-  function OneTimeTokenProvider() {
+  function OneTimeTokenProvider(publicAPIKey, options) {
     classCallCheck(this, OneTimeTokenProvider);
 
+    this.publicAPIKey = publicAPIKey;
+    this.options = options;
     this.token = null;
+    this.timeout = null;
     this.marginToExpire = 0.05; // a margin to prevent unexpected expiration (5% of the time)
   }
 
   createClass(OneTimeTokenProvider, [{
     key: 'get',
-    value: function get$$1(options) {
+    value: function get$$1() {
       var _this = this;
 
-      return this.retrieve(options).then(function () {
+      return this.retrieve().then(function () {
         var token = _this.token;
         _this.token = null;
         return token;
@@ -256,20 +259,20 @@ var OneTimeTokenProvider = function () {
     }
   }, {
     key: 'retrieve',
-    value: function retrieve(options) {
+    value: function retrieve() {
       var _this2 = this;
 
       if (this.token != null) {
         return Promise.resolve();
       }
-      return this.issue(options).then(function (data) {
+      return this.issue().then(function (data) {
         return _this2.storeToken(data);
       });
     }
   }, {
     key: 'issue',
-    value: function issue(options) {
-      return Connection.build(true, Object.assign({}, options, { apiKey: options.publicAPIKey })).sendJson('/auth/tokens', { type: 'one-time' }).then(function (response) {
+    value: function issue() {
+      return Connection.build(true, Object.assign({}, this.options, { apiKey: this.publicAPIKey })).sendJson('/auth/tokens', { type: 'one-time' }).then(function (response) {
         return response.data;
       });
     }
@@ -278,7 +281,7 @@ var OneTimeTokenProvider = function () {
     value: function storeToken(data) {
       var _this3 = this;
 
-      setTimeout(function () {
+      this.timeout = setTimeout(function () {
         _this3.token = null;
       }, data.expires_in * (1 - this.marginToExpire) * 1000);
       this.token = data.value;
@@ -295,15 +298,14 @@ var PublicKeyAuthInterceptor = function (_AuthInterceptor) {
 
     var _this = possibleConstructorReturn(this, (PublicKeyAuthInterceptor.__proto__ || Object.getPrototypeOf(PublicKeyAuthInterceptor)).call(this));
 
-    _this.options = Object.assign({}, options, { apiKey: publicAPIKey });
-    _this.oneTimeTokenProvider = new OneTimeTokenProvider();
+    _this.oneTimeTokenProvider = new OneTimeTokenProvider(publicAPIKey, options);
     return _this;
   }
 
   createClass(PublicKeyAuthInterceptor, [{
     key: 'interceptRequest',
     value: function interceptRequest(config) {
-      return this.oneTimeTokenProvider.get(this.options).then(function (token) {
+      return this.oneTimeTokenProvider.get().then(function (token) {
         config.headers['x-api-key'] = 'use-scnnr-one-time-token';
         config.headers['x-scnnr-one-time-token'] = token;
         return config;

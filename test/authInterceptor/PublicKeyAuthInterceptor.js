@@ -22,11 +22,10 @@ describe('PublicKeyAuthInterceptor', () => {
   function getInterceptor() { return new scnnr.PublicKeyAuthInterceptor(publicAPIKey, options) }
 
   describe('constructor', () => {
-    it('should receive a public API key and options', () => {
+    it('should have oneTimeTokenProvider with the provided publicAPIKey and options', () => {
       const interceptor = getInterceptor()
-      expect(interceptor.options.apiKey).to.equal(publicAPIKey)
-      expect(interceptor.options.url).to.equal(options.url)
-      expect(interceptor.options.version).to.equal(options.version)
+      expect(interceptor.oneTimeTokenProvider.publicAPIKey).to.equal(publicAPIKey)
+      expect(interceptor.oneTimeTokenProvider.options).to.equal(options)
     })
   })
 

@@ -5,13 +5,12 @@ import { expect } from 'chai'
 import scnnr from '../dist/scnnr.esm'
 
 describe('OneTimeTokenProvider', () => {
-  const provider = new scnnr.OneTimeTokenProvider()
   const publicAPIKey = 'dummy-public-key'
   const options = {
-    publicAPIKey,
     url: 'https://dummy.scnnr.cubki.jp/',
     version: 'v1',
   }
+  const provider = new scnnr.OneTimeTokenProvider(publicAPIKey, options)
   const oneTimeToken = 'this-is-one-time-token'
   const tokenResponseBody = {
     'expires_in': 900,
