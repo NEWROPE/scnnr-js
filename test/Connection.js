@@ -27,7 +27,7 @@ describe('Connection', () => {
   describe('constructor', () => {
     const requestPath = '/recognitions/some/recognition-id'
 
-    context('when an authInterceptor is pass', () => {
+    context('when an authInterceptor is passed', () => {
       const authInterceptor = scnnr.authInterceptor(config)
 
       it('registers it for requests', () => {
@@ -38,8 +38,8 @@ describe('Connection', () => {
       })
     })
 
-    context('when an authInterceptor does not pass', () => {
-      it('does not register any intercepter for requests', () => {
+    context('when no authInterceptor is passed', () => {
+      it('does not register any interceptor for requests', () => {
         expect(getConnection().httpClient.interceptors.request.handlers).is.empty
       })
     })
