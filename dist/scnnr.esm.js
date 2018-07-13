@@ -252,9 +252,7 @@ var OneTimeTokenProvider = function () {
       var _this = this;
 
       return this.retrieve().then(function () {
-        var token = _this.token;
-        _this.token = null;
-        return token;
+        return _this.getAndClearToken();
       });
     }
   }, {
@@ -285,6 +283,22 @@ var OneTimeTokenProvider = function () {
         _this3.token = null;
       }, data.expires_in * (1 - this.marginToExpire) * 1000);
       this.token = data.value;
+    }
+  }, {
+    key: 'getAndClearToken',
+    value: function getAndClearToken() {
+      this.clearExpiration();
+      var token = this.token;
+      this.token = null;
+      return token;
+    }
+  }, {
+    key: 'clearExpiration',
+    value: function clearExpiration() {
+      if (this.timeout != null) {
+        clearTimeout(this.timeout);
+        this.timeout = null;
+      }
     }
   }]);
   return OneTimeTokenProvider;

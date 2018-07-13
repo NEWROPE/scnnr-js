@@ -20,12 +20,22 @@ describe('OneTimeTokenProvider', () => {
   }
 
   describe('get', () => {
-    before(() => provider.storeToken(tokenResponseBody))
+    before(() => {
+      sinon.spy(global, 'clearTimeout')
+      provider.storeToken(tokenResponseBody)
+    })
+    after(() => global.clearTimeout.restore())
 
     it('returns a one-time-token and remove it from cache', () => {
+      expect(provider.timeout).not.to.be.null
+      const timeout = provider.timeout
       return provider.get(options)
         .then(token => expect(token).to.equal(oneTimeToken))
-        .then(() => expect(provider.token).to.be.null)
+        .then(() => {
+          expect(provider.token).to.be.null
+          expect(global.clearTimeout.calledWith(timeout)).to.be.ok
+          expect(provider.timeout).to.be.null
+        })
     })
   })
 

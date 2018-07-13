@@ -9,21 +9,11 @@ export default class OneTimeTokenProvider {
     this.marginToExpire = 0.05 // a margin to prevent unexpected expiration (5% of the time)
   }
 
-  get() {
-    return this.retrieve()
-      .then(() => {
-        const token = this.token
-        this.token = null
-        return token
-      })
-  }
+  get() { return this.retrieve().then(() => this.getAndClearToken()) }
 
   retrieve() {
-    if (this.token != null) {
-      return Promise.resolve()
-    }
-    return this.issue()
-      .then(data => this.storeToken(data))
+    if (this.token != null) { return Promise.resolve() }
+    return this.issue().then(data => this.storeToken(data))
   }
 
   issue() {
@@ -35,5 +25,19 @@ export default class OneTimeTokenProvider {
   storeToken(data) {
     this.timeout = setTimeout(() => { this.token = null }, data.expires_in * (1 - this.marginToExpire) * 1000)
     this.token = data.value
+  }
+
+  getAndClearToken() {
+    this.clearExpiration()
+    const token = this.token
+    this.token = null
+    return token
+  }
+
+  clearExpiration() {
+    if (this.timeout != null) {
+      clearTimeout(this.timeout)
+      this.timeout = null
+    }
   }
 }
