@@ -9,7 +9,7 @@ describe('PublicKeyAuthInterceptor', () => {
     url: 'https://dummy.scnnr.cubki.jp/',
     version: 'v1'
   }
-  const publicAPIKey = 'dummy-key'
+  const publicAPIKey = 'dummy-public-key'
   const oneTimeToken = 'this-is-one-time-token'
 
   const tokenResponseBody = {
@@ -22,8 +22,11 @@ describe('PublicKeyAuthInterceptor', () => {
   function getInterceptor() { return new scnnr.PublicKeyAuthInterceptor(publicAPIKey, options) }
 
   describe('constructor', () => {
-    it('should receive a public API key', () => {
-      expect(getInterceptor().publicAPIKey).to.equal(publicAPIKey)
+    it('should receive a public API key and options', () => {
+      const interceptor = getInterceptor()
+      expect(interceptor.options.apiKey).to.equal(publicAPIKey)
+      expect(interceptor.options.url).to.equal(options.url)
+      expect(interceptor.options.version).to.equal(options.version)
     })
   })
 
@@ -31,72 +34,12 @@ describe('PublicKeyAuthInterceptor', () => {
     it('sets x-api-key and x-scnnr-one-time-token headers', () => {
       const config = { headers: {} }
       const interceptor = getInterceptor()
-      interceptor.storeOneTimeToken(tokenResponseBody)
+      interceptor.oneTimeTokenProvider.storeToken(tokenResponseBody)
       return interceptor.interceptRequest(config)
         .then(config => {
           expect(config.headers['x-api-key']).to.equal('use-scnnr-one-time-token')
           expect(config.headers['x-scnnr-one-time-token']).to.equal(oneTimeToken)
         })
-    })
-  })
-
-  describe('getOneTimeToken', () => {
-    it('returns a one-time-token and remove it from cache', () => {
-      const interceptor = getInterceptor()
-      interceptor.storeOneTimeToken(tokenResponseBody)
-      return interceptor.getOneTimeToken()
-        .then(token => expect(token).to.equal(oneTimeToken))
-        .then(() => expect(interceptor.oneTimeToken).to.be.undefined)
-    })
-  })
-
-  describe('retrieveOneTimeToken', () => {
-    context('when a one-time-token is not cached', () => {
-      it('issues a token and cache it', () => {
-        nock(options.url + options.version, { reqheaders: { 'x-api-key': publicAPIKey } })
-          .post('/auth/tokens', JSON.stringify({ type: 'one-time' }))
-          .reply(200, tokenResponseBody)
-        const interceptor = getInterceptor()
-        return interceptor.retrieveOneTimeToken()
-          .then(result => expect(result).to.be.undefined)
-          .then(() => expect(interceptor.oneTimeToken).to.equal(oneTimeToken))
-      })
-    })
-
-    context('when a one-time-token is already cached', () => {
-      it('does nothing', () => {
-        const interceptor = getInterceptor()
-        interceptor.storeOneTimeToken(tokenResponseBody)
-        return interceptor.retrieveOneTimeToken()
-          .then(result => expect(result).to.be.undefined)
-          .then(() => expect(interceptor.oneTimeToken).to.equal(oneTimeToken))
-      })
-    })
-
-    describe('about token expiration', () => {
-      let clock
-      before(() => clock = sinon.useFakeTimers())
-      after(() => clock.restore())
-
-      it('reserves to delete the cache', () => {
-        const interceptor = getInterceptor()
-        interceptor.storeOneTimeToken(tokenResponseBody)
-        return interceptor.retrieveOneTimeToken()
-          .then(() => expect(interceptor.oneTimeToken).to.equal(oneTimeToken))
-          .then(() => clock.tick(tokenResponseBody.expires_in * (1 - interceptor.marginToExpire) * 1000))
-          .then(() => expect(interceptor.oneTimeToken).to.be.undefined)
-      })
-    })
-  })
-
-  describe('issueOneTimeToken', () => {
-    it('calls an API to issue a one-time-token and returns the response data', () => {
-      nock(options.url + options.version, { reqheaders: { 'x-api-key': publicAPIKey } })
-        .post('/auth/tokens', JSON.stringify({ type: 'one-time' }))
-        .reply(200, tokenResponseBody)
-
-      return getInterceptor().issueOneTimeToken()
-        .then(data => expect(data).to.deep.equal(tokenResponseBody))
     })
   })
 })

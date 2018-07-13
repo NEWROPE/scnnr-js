@@ -239,6 +239,58 @@ var PrivateKeyAuthInterceptor = function (_AuthInterceptor) {
   return PrivateKeyAuthInterceptor;
 }(AuthInterceptor);
 
+var OneTimeTokenProvider = function () {
+  function OneTimeTokenProvider() {
+    classCallCheck(this, OneTimeTokenProvider);
+
+    this.token = null;
+    this.marginToExpire = 0.05; // a margin to prevent unexpected expiration (5% of the time)
+  }
+
+  createClass(OneTimeTokenProvider, [{
+    key: 'get',
+    value: function get$$1(options) {
+      var _this = this;
+
+      return this.retrieve(options).then(function () {
+        var token = _this.token;
+        _this.token = null;
+        return token;
+      });
+    }
+  }, {
+    key: 'retrieve',
+    value: function retrieve(options) {
+      var _this2 = this;
+
+      if (this.token != null) {
+        return Promise.resolve();
+      }
+      return this.issue(options).then(function (data) {
+        return _this2.storeToken(data);
+      });
+    }
+  }, {
+    key: 'issue',
+    value: function issue(options) {
+      return Connection.build(true, Object.assign({}, options, { apiKey: options.publicAPIKey })).sendJson('/auth/tokens', { type: 'one-time' }).then(function (response) {
+        return response.data;
+      });
+    }
+  }, {
+    key: 'storeToken',
+    value: function storeToken(data) {
+      var _this3 = this;
+
+      setTimeout(function () {
+        _this3.token = null;
+      }, data.expires_in * (1 - this.marginToExpire) * 1000);
+      this.token = data.value;
+    }
+  }]);
+  return OneTimeTokenProvider;
+}();
+
 var PublicKeyAuthInterceptor = function (_AuthInterceptor) {
   inherits(PublicKeyAuthInterceptor, _AuthInterceptor);
 
@@ -247,60 +299,19 @@ var PublicKeyAuthInterceptor = function (_AuthInterceptor) {
 
     var _this = possibleConstructorReturn(this, (PublicKeyAuthInterceptor.__proto__ || Object.getPrototypeOf(PublicKeyAuthInterceptor)).call(this));
 
-    _this.publicAPIKey = publicAPIKey;
-    _this.options = options;
-    _this.marginToExpire = 0.05; // a margin to prevent unexpected expiration (5% of the time)
+    _this.options = Object.assign({}, options, { apiKey: publicAPIKey });
+    _this.oneTimeTokenProvider = new OneTimeTokenProvider();
     return _this;
   }
 
   createClass(PublicKeyAuthInterceptor, [{
     key: 'interceptRequest',
     value: function interceptRequest(config) {
-      return this.getOneTimeToken().then(function (token) {
+      return this.oneTimeTokenProvider.get(this.options).then(function (token) {
         config.headers['x-api-key'] = 'use-scnnr-one-time-token';
         config.headers['x-scnnr-one-time-token'] = token;
         return config;
       });
-    }
-  }, {
-    key: 'getOneTimeToken',
-    value: function getOneTimeToken() {
-      var _this2 = this;
-
-      return this.retrieveOneTimeToken().then(function () {
-        var token = _this2.oneTimeToken;
-        delete _this2.oneTimeToken;
-        return token;
-      });
-    }
-  }, {
-    key: 'retrieveOneTimeToken',
-    value: function retrieveOneTimeToken() {
-      var _this3 = this;
-
-      if (this.oneTimeToken != null) {
-        return Promise.resolve();
-      }
-      return this.issueOneTimeToken().then(function (data) {
-        return _this3.storeOneTimeToken(data);
-      });
-    }
-  }, {
-    key: 'issueOneTimeToken',
-    value: function issueOneTimeToken() {
-      return Connection.build(true, Object.assign({}, this.options, { apiKey: this.publicAPIKey })).sendJson('/auth/tokens', { type: 'one-time' }).then(function (response) {
-        return response.data;
-      });
-    }
-  }, {
-    key: 'storeOneTimeToken',
-    value: function storeOneTimeToken(data) {
-      var _this4 = this;
-
-      setTimeout(function () {
-        delete _this4.oneTimeToken;
-      }, data.expires_in * (1 - this.marginToExpire) * 1000);
-      this.oneTimeToken = data.value;
     }
   }]);
   return PublicKeyAuthInterceptor;
@@ -618,7 +629,8 @@ var index = Object.assign(client, {
   Recognition: Recognition,
   PrivateKeyAuthInterceptor: PrivateKeyAuthInterceptor,
   PublicKeyAuthInterceptor: PublicKeyAuthInterceptor,
-  authInterceptor: authInterceptor
+  authInterceptor: authInterceptor,
+  OneTimeTokenProvider: OneTimeTokenProvider
 }, errors);
 
 module.exports = index;
