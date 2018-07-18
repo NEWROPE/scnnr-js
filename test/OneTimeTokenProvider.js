@@ -20,21 +20,13 @@ describe('OneTimeTokenProvider', () => {
   }
 
   describe('get', () => {
-    before(() => {
-      sinon.spy(global, 'clearTimeout')
-      provider.storeToken(tokenResponseBody)
-    })
-    after(() => global.clearTimeout.restore())
+    before(() => provider.token = scnnr.buildToken(tokenResponseBody))
 
     it('returns a one-time-token and remove it from cache', () => {
-      expect(provider.timeout).not.to.be.null
-      const timeout = provider.timeout
       return provider.get(options)
-        .then(token => expect(token).to.equal(oneTimeToken))
-        .then(() => {
+        .then(token => {
+          expect(token.value).to.equal(oneTimeToken)
           expect(provider.token).to.be.null
-          expect(global.clearTimeout.calledWith(timeout)).to.be.ok
-          expect(provider.timeout).to.be.null
         })
     })
   })
@@ -46,34 +38,45 @@ describe('OneTimeTokenProvider', () => {
           .post('/auth/tokens', JSON.stringify({ type: 'one-time' }))
           .reply(200, tokenResponseBody)
         return provider.issue(options)
-          .then(result => expect(result).to.be.undefined)
-          .then(() => expect(provider.token).to.equal(oneTimeToken))
+          .then(result => {
+            expect(result).to.be.undefined
+            expect(provider.token.value).to.equal(oneTimeToken)
+          })
       })
     })
 
     context('when a one-time-token is already cached', () => {
-      before(() => provider.storeToken(tokenResponseBody))
+      const previousResponse = Object.assign({}, tokenResponseBody, { value: 'previous-token' })
+      before(() => provider.token = scnnr.buildToken(previousResponse))
 
       it('does nothing', () => {
         return provider.issue(options)
-          .then(result => expect(result).to.be.undefined)
-          .then(() => expect(provider.token).to.equal(oneTimeToken))
+          .then(result => {
+            expect(result).to.be.undefined
+            expect(provider.token.value).to.equal(previousResponse.value)
+          })
       })
     })
 
-    describe('about token expiration', () => {
+    describe('after expiration of a previous token', () => {
+      const previousResponse = Object.assign({}, tokenResponseBody, { value: 'previous-token' })
+
       let clock
       before(() => {
         clock = sinon.useFakeTimers()
-        provider.storeToken(tokenResponseBody)
+        provider.token = scnnr.buildToken(previousResponse)
       })
       after(() => clock.restore())
 
-      it('reserves to delete the cache', () => {
+      it('clears the cache and issues a new token', () => {
+        clock.tick(previousResponse.expires_in * (1 - provider.marginToExpire) * 1000)
+        nock(options.url + options.version, { reqheaders: { 'x-api-key': publicAPIKey } })
+          .post('/auth/tokens', JSON.stringify({ type: 'one-time' }))
+          .reply(200, tokenResponseBody)
         return provider.issue(options)
-          .then(() => expect(provider.token).to.equal(oneTimeToken))
-          .then(() => clock.tick(tokenResponseBody.expires_in * (1 - provider.marginToExpire) * 1000))
-          .then(() => expect(provider.token).to.be.null)
+          .then(() => {
+            expect(provider.token.value).to.equal(oneTimeToken)
+          })
       })
     })
   })
@@ -84,7 +87,10 @@ describe('OneTimeTokenProvider', () => {
         .post('/auth/tokens', JSON.stringify({ type: 'one-time' }))
         .reply(200, tokenResponseBody)
 
-      return provider.requestToken(options).then(data => expect(data).to.deep.equal(tokenResponseBody))
+      return provider.requestToken(options).then(token => {
+        expect(token).to.be.an.instanceof(scnnr.OneTimeToken)
+        expect(token.value).to.deep.equal(tokenResponseBody.value)
+      })
     })
   })
 })

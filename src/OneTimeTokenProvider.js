@@ -1,4 +1,5 @@
 import Connection from './Connection'
+import { buildToken } from './token'
 
 export default class OneTimeTokenProvider {
   constructor(publicAPIKey, options) {
@@ -12,32 +13,24 @@ export default class OneTimeTokenProvider {
   get() { return this.issue().then(() => this.getAndClearToken()) }
 
   issue() {
-    if (this.token != null) { return Promise.resolve() }
-    return this.requestToken().then(data => this.storeToken(data))
+    if (this.hasValidToken()) { return Promise.resolve() }
+    return this.requestToken().then(token => { this.token = token })
   }
 
   requestToken() {
     return Connection.build(true, Object.assign({}, this.options, { apiKey: this.publicAPIKey }))
       .sendJson('/auth/tokens', { type: 'one-time' })
-      .then(response => response.data)
+      .then(response => buildToken(response.data))
   }
 
-  storeToken(data) {
-    this.timeout = setTimeout(() => { this.token = null }, data.expires_in * (1 - this.marginToExpire) * 1000)
-    this.token = data.value
+  hasValidToken() {
+    if (this.token == null) { return false }
+    return !this.token.hasExpired(this.token.expiresIn * this.marginToExpire * 1000)
   }
 
   getAndClearToken() {
-    this.clearExpiration()
     const token = this.token
     this.token = null
     return token
-  }
-
-  clearExpiration() {
-    if (this.timeout != null) {
-      clearTimeout(this.timeout)
-      this.timeout = null
-    }
   }
 }

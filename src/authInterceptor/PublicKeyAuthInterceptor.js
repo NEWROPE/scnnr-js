@@ -12,7 +12,7 @@ export default class PublicKeyAuthInterceptor extends AuthInterceptor {
     return this.oneTimeTokenProvider.get()
       .then(token => {
         config.headers['x-api-key'] = 'use-scnnr-one-time-token'
-        config.headers['x-scnnr-one-time-token'] = token
+        config.headers['x-scnnr-one-time-token'] = token.value
         return config
       })
   }

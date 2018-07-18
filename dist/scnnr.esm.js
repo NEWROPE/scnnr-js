@@ -235,6 +235,39 @@ var PrivateKeyAuthInterceptor = function (_AuthInterceptor) {
   return PrivateKeyAuthInterceptor;
 }(AuthInterceptor);
 
+var OneTimeToken = function () {
+  function OneTimeToken(value, expiresIn) {
+    classCallCheck(this, OneTimeToken);
+
+    this.value = value;
+    this.expiresIn = expiresIn;
+    this.expiresAt = new Date(Date.now() + expiresIn * 1000);
+  }
+
+  createClass(OneTimeToken, [{
+    key: "hasExpired",
+    value: function hasExpired() {
+      var margin = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+      return Date.now() >= this.expiresAt.getTime() - margin;
+    }
+  }]);
+  return OneTimeToken;
+}();
+
+function buildToken(data) {
+  switch (data.type) {
+    case 'one-time':
+      return new OneTimeToken(data.value, data.expires_in);
+    default:
+      return null;
+  }
+}
+
+var token = Object.freeze({
+	OneTimeToken: OneTimeToken,
+	buildToken: buildToken
+});
+
 var OneTimeTokenProvider = function () {
   function OneTimeTokenProvider(publicAPIKey, options) {
     classCallCheck(this, OneTimeTokenProvider);
@@ -260,45 +293,34 @@ var OneTimeTokenProvider = function () {
     value: function issue() {
       var _this2 = this;
 
-      if (this.token != null) {
+      if (this.hasValidToken()) {
         return Promise.resolve();
       }
-      return this.requestToken().then(function (data) {
-        return _this2.storeToken(data);
+      return this.requestToken().then(function (token) {
+        _this2.token = token;
       });
     }
   }, {
     key: 'requestToken',
     value: function requestToken() {
       return Connection.build(true, Object.assign({}, this.options, { apiKey: this.publicAPIKey })).sendJson('/auth/tokens', { type: 'one-time' }).then(function (response) {
-        return response.data;
+        return buildToken(response.data);
       });
     }
   }, {
-    key: 'storeToken',
-    value: function storeToken(data) {
-      var _this3 = this;
-
-      this.timeout = setTimeout(function () {
-        _this3.token = null;
-      }, data.expires_in * (1 - this.marginToExpire) * 1000);
-      this.token = data.value;
+    key: 'hasValidToken',
+    value: function hasValidToken() {
+      if (this.token == null) {
+        return false;
+      }
+      return !this.token.hasExpired(this.token.expiresIn * this.marginToExpire * 1000);
     }
   }, {
     key: 'getAndClearToken',
     value: function getAndClearToken() {
-      this.clearExpiration();
       var token = this.token;
       this.token = null;
       return token;
-    }
-  }, {
-    key: 'clearExpiration',
-    value: function clearExpiration() {
-      if (this.timeout != null) {
-        clearTimeout(this.timeout);
-        this.timeout = null;
-      }
     }
   }]);
   return OneTimeTokenProvider;
@@ -321,7 +343,7 @@ var PublicKeyAuthInterceptor = function (_AuthInterceptor) {
     value: function interceptRequest(config) {
       return this.oneTimeTokenProvider.get().then(function (token) {
         config.headers['x-api-key'] = 'use-scnnr-one-time-token';
-        config.headers['x-scnnr-one-time-token'] = token;
+        config.headers['x-scnnr-one-time-token'] = token.value;
         return config;
       });
     }
@@ -630,42 +652,6 @@ var Client = function () {
   }]);
   return Client;
 }();
-
-var OneTimeToken = function () {
-  function OneTimeToken(value, expiresAt) {
-    classCallCheck(this, OneTimeToken);
-
-    this.value = value;
-    this.expiresAt = expiresAt;
-  }
-
-  createClass(OneTimeToken, [{
-    key: "hasExpired",
-    value: function hasExpired() {
-      var margin = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-      return Date.now() >= this.expiresAt.getTime() - margin;
-    }
-  }]);
-  return OneTimeToken;
-}();
-
-function buildToken(data) {
-  switch (data.type) {
-    case 'one-time':
-      return new OneTimeToken(data.value, calculateExpiration(data.expires_in));
-    default:
-      return null;
-  }
-}
-
-function calculateExpiration(seconds) {
-  return new Date(Date.now() + seconds * 1000);
-}
-
-var token = Object.freeze({
-	OneTimeToken: OneTimeToken,
-	buildToken: buildToken
-});
 
 function client(options) {
   return new Client(options);

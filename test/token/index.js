@@ -21,6 +21,7 @@ describe('token', () => {
         const token = scnnr.buildToken(data)
         expect(token).to.be.an.instanceof(scnnr.OneTimeToken)
         expect(token.value).to.eq(data.value)
+        expect(token.expiresIn).to.eq(data.expires_in)
         expect(token.expiresAt.getTime() - Date.now()).to.eq(data.expires_in * 1000)
       })
     })

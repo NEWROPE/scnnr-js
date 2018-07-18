@@ -33,7 +33,7 @@ describe('PublicKeyAuthInterceptor', () => {
     it('sets x-api-key and x-scnnr-one-time-token headers', () => {
       const config = { headers: {} }
       const interceptor = getInterceptor()
-      interceptor.oneTimeTokenProvider.storeToken(tokenResponseBody)
+      interceptor.oneTimeTokenProvider.token = scnnr.buildToken(tokenResponseBody)
       return interceptor.interceptRequest(config)
         .then(config => {
           expect(config.headers['x-api-key']).to.equal('use-scnnr-one-time-token')
