@@ -9,14 +9,14 @@ export default class OneTimeTokenProvider {
     this.marginToExpire = 0.05 // a margin to prevent unexpected expiration (5% of the time)
   }
 
-  get() { return this.retrieve().then(() => this.getAndClearToken()) }
-
-  retrieve() {
-    if (this.token != null) { return Promise.resolve() }
-    return this.issue().then(data => this.storeToken(data))
-  }
+  get() { return this.issue().then(() => this.getAndClearToken()) }
 
   issue() {
+    if (this.token != null) { return Promise.resolve() }
+    return this.requestToken().then(data => this.storeToken(data))
+  }
+
+  requestToken() {
     return Connection.build(true, Object.assign({}, this.options, { apiKey: this.publicAPIKey }))
       .sendJson('/auth/tokens', { type: 'one-time' })
       .then(response => response.data)

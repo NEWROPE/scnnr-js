@@ -255,25 +255,25 @@ var OneTimeTokenProvider = function () {
     value: function get$$1() {
       var _this = this;
 
-      return this.retrieve().then(function () {
+      return this.issue().then(function () {
         return _this.getAndClearToken();
-      });
-    }
-  }, {
-    key: 'retrieve',
-    value: function retrieve() {
-      var _this2 = this;
-
-      if (this.token != null) {
-        return Promise.resolve();
-      }
-      return this.issue().then(function (data) {
-        return _this2.storeToken(data);
       });
     }
   }, {
     key: 'issue',
     value: function issue() {
+      var _this2 = this;
+
+      if (this.token != null) {
+        return Promise.resolve();
+      }
+      return this.requestToken().then(function (data) {
+        return _this2.storeToken(data);
+      });
+    }
+  }, {
+    key: 'requestToken',
+    value: function requestToken() {
       return Connection.build(true, Object.assign({}, this.options, { apiKey: this.publicAPIKey })).sendJson('/auth/tokens', { type: 'one-time' }).then(function (response) {
         return response.data;
       });

@@ -39,13 +39,13 @@ describe('OneTimeTokenProvider', () => {
     })
   })
 
-  describe('retrieve', () => {
+  describe('issue', () => {
     context('when a one-time-token is not cached', () => {
       it('issues a token and cache it', () => {
         nock(options.url + options.version, { reqheaders: { 'x-api-key': publicAPIKey } })
           .post('/auth/tokens', JSON.stringify({ type: 'one-time' }))
           .reply(200, tokenResponseBody)
-        return provider.retrieve(options)
+        return provider.issue(options)
           .then(result => expect(result).to.be.undefined)
           .then(() => expect(provider.token).to.equal(oneTimeToken))
       })
@@ -55,7 +55,7 @@ describe('OneTimeTokenProvider', () => {
       before(() => provider.storeToken(tokenResponseBody))
 
       it('does nothing', () => {
-        return provider.retrieve(options)
+        return provider.issue(options)
           .then(result => expect(result).to.be.undefined)
           .then(() => expect(provider.token).to.equal(oneTimeToken))
       })
@@ -70,7 +70,7 @@ describe('OneTimeTokenProvider', () => {
       after(() => clock.restore())
 
       it('reserves to delete the cache', () => {
-        return provider.retrieve(options)
+        return provider.issue(options)
           .then(() => expect(provider.token).to.equal(oneTimeToken))
           .then(() => clock.tick(tokenResponseBody.expires_in * (1 - provider.marginToExpire) * 1000))
           .then(() => expect(provider.token).to.be.null)
@@ -78,13 +78,13 @@ describe('OneTimeTokenProvider', () => {
     })
   })
 
-  describe('issue', () => {
+  describe('requestToken', () => {
     it('calls an API to issue a one-time-token and returns the response data', () => {
       nock(options.url + options.version, { reqheaders: { 'x-api-key': publicAPIKey } })
         .post('/auth/tokens', JSON.stringify({ type: 'one-time' }))
         .reply(200, tokenResponseBody)
 
-      return provider.issue(options).then(data => expect(data).to.deep.equal(tokenResponseBody))
+      return provider.requestToken(options).then(data => expect(data).to.deep.equal(tokenResponseBody))
     })
   })
 })
