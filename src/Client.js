@@ -1,17 +1,8 @@
 import defaults from './Client/defaults'
 import Connection from './Connection'
 import Recognition from './Recognition'
-import { PreconditionFailed, RecognitionError } from './errors'
+import { RecognitionError } from './errors'
 import poll from './polling'
-
-
-function sanitizeAPIKey(key) {
-  if (typeof key !== 'string') {
-    return null
-  }
-  key = key.replace(/^\s*/, '').replace(/\s*$/, '')
-  return key === '' ? null : key
-}
 
 function getTimeoutLength(timeout = 0, timeoutMaxAllowed) {
   return (timeout - timeoutMaxAllowed) < 0 ? timeout : timeoutMaxAllowed
@@ -54,7 +45,7 @@ export default class Client {
             return poll({
               requestFunc: (options) => this.fetch(recognition.id, options),
               conditionChecker: (recognition) => recognition.isFinished(),
-              remainingTime: options.timeout - timeoutForFirstRequest, 
+              remainingTime: options.timeout - timeoutForFirstRequest,
             })
           }
 
@@ -81,23 +72,7 @@ export default class Client {
     return recognition
   }
 
-  connection(useAPIKey, options) {
-    return new Connection(this.connectionConfig(useAPIKey, options))
-  }
-
-  connectionConfig(useAPIKey, options) {
-    const config = Object.assign({}, this.config, options)
-    const apiKey = sanitizeAPIKey(config.apiKey)
-    if (useAPIKey && apiKey == null) {
-      throw new PreconditionFailed('`apiKey` configuration is required.')
-    }
-    const params = options.params || {}
-    if ((config.timeout || 0) > 0) { params.timeout = config.timeout }
-    return {
-      apiKey, params,
-      url: config.url + config.version,
-      onUploadProgress: config.onUploadProgress,
-      onDownloadProgress: config.onDownloadProgress,
-    }
+  connection(needAuth, options) {
+    return Connection.build(needAuth, Object.assign({}, this.config, options))
   }
 }

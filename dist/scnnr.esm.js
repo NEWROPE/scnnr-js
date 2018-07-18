@@ -194,11 +194,189 @@ var errors = Object.freeze({
 	RecognitionError: RecognitionError
 });
 
+var AuthInterceptor = function () {
+  function AuthInterceptor() {
+    classCallCheck(this, AuthInterceptor);
+    this.interceptRequest = this.interceptRequest.bind(this);
+  }
+
+  createClass(AuthInterceptor, [{
+    key: "interceptRequest",
+    value: function interceptRequest(config) {
+      return Promise.resolve(config);
+    }
+  }]);
+  return AuthInterceptor;
+}();
+
+var PrivateKeyAuthInterceptor = function (_AuthInterceptor) {
+  inherits(PrivateKeyAuthInterceptor, _AuthInterceptor);
+
+  function PrivateKeyAuthInterceptor(apiKey) {
+    classCallCheck(this, PrivateKeyAuthInterceptor);
+
+    var _this = possibleConstructorReturn(this, (PrivateKeyAuthInterceptor.__proto__ || Object.getPrototypeOf(PrivateKeyAuthInterceptor)).call(this));
+
+    _this.apiKey = apiKey;
+    return _this;
+  }
+
+  createClass(PrivateKeyAuthInterceptor, [{
+    key: 'interceptRequest',
+    value: function interceptRequest(config) {
+      var _this2 = this;
+
+      return new Promise(function (resolve, reject) {
+        config.headers['x-api-key'] = _this2.apiKey;
+        resolve(config);
+      });
+    }
+  }]);
+  return PrivateKeyAuthInterceptor;
+}(AuthInterceptor);
+
+var OneTimeToken = function () {
+  function OneTimeToken(value, expiresIn) {
+    classCallCheck(this, OneTimeToken);
+
+    this.value = value;
+    this.expiresIn = expiresIn;
+    this.expiresAt = new Date(Date.now() + expiresIn * 1000);
+  }
+
+  createClass(OneTimeToken, [{
+    key: "hasExpired",
+    value: function hasExpired() {
+      var margin = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+      return Date.now() >= this.expiresAt.getTime() - margin;
+    }
+  }]);
+  return OneTimeToken;
+}();
+
+function buildToken(data) {
+  switch (data.type) {
+    case 'one-time':
+      return new OneTimeToken(data.value, data.expires_in);
+    default:
+      return null;
+  }
+}
+
+var token = Object.freeze({
+	OneTimeToken: OneTimeToken,
+	buildToken: buildToken
+});
+
+var OneTimeTokenProvider = function () {
+  function OneTimeTokenProvider(publicAPIKey, options) {
+    classCallCheck(this, OneTimeTokenProvider);
+
+    this.publicAPIKey = publicAPIKey;
+    this.options = options;
+    this.token = null;
+    this.timeout = null;
+    this.marginToExpire = 0.05; // a margin to prevent unexpected expiration (5% of the time)
+  }
+
+  createClass(OneTimeTokenProvider, [{
+    key: 'get',
+    value: function get$$1() {
+      var _this = this;
+
+      return this.issue().then(function () {
+        return _this.getAndClearToken();
+      });
+    }
+  }, {
+    key: 'issue',
+    value: function issue() {
+      var _this2 = this;
+
+      if (this.hasValidToken()) {
+        return Promise.resolve();
+      }
+      return this.requestToken().then(function (token) {
+        _this2.token = token;
+      });
+    }
+  }, {
+    key: 'requestToken',
+    value: function requestToken() {
+      return Connection.build(true, Object.assign({}, this.options, { apiKey: this.publicAPIKey })).sendJson('/auth/tokens', { type: 'one-time' }).then(function (response) {
+        return buildToken(response.data);
+      });
+    }
+  }, {
+    key: 'hasValidToken',
+    value: function hasValidToken() {
+      if (this.token == null) {
+        return false;
+      }
+      return !this.token.hasExpired(this.token.expiresIn * this.marginToExpire * 1000);
+    }
+  }, {
+    key: 'getAndClearToken',
+    value: function getAndClearToken() {
+      var token = this.token;
+      this.token = null;
+      return token;
+    }
+  }]);
+  return OneTimeTokenProvider;
+}();
+
+var PublicKeyAuthInterceptor = function (_AuthInterceptor) {
+  inherits(PublicKeyAuthInterceptor, _AuthInterceptor);
+
+  function PublicKeyAuthInterceptor(publicAPIKey, options) {
+    classCallCheck(this, PublicKeyAuthInterceptor);
+
+    var _this = possibleConstructorReturn(this, (PublicKeyAuthInterceptor.__proto__ || Object.getPrototypeOf(PublicKeyAuthInterceptor)).call(this));
+
+    _this.oneTimeTokenProvider = new OneTimeTokenProvider(publicAPIKey, options);
+    return _this;
+  }
+
+  createClass(PublicKeyAuthInterceptor, [{
+    key: 'interceptRequest',
+    value: function interceptRequest(config) {
+      return this.oneTimeTokenProvider.get().then(function (token) {
+        config.headers['x-api-key'] = 'use-scnnr-one-time-token';
+        config.headers['x-scnnr-one-time-token'] = token.value;
+        return config;
+      });
+    }
+  }]);
+  return PublicKeyAuthInterceptor;
+}(AuthInterceptor);
+
+function sanitizeAPIKey(key) {
+  if (typeof key !== 'string') {
+    return null;
+  }
+  key = key.replace(/^\s*/, '').replace(/\s*$/, '');
+  return key === '' ? null : key;
+}
+
+function authInterceptor(config) {
+  var apiKey = sanitizeAPIKey(config.apiKey);
+  var publicAPIKey = sanitizeAPIKey(config.publicAPIKey);
+  if (apiKey != null) {
+    return new PrivateKeyAuthInterceptor(apiKey);
+  } else if (publicAPIKey != null) {
+    return new PublicKeyAuthInterceptor(publicAPIKey, { url: config.url, version: config.version });
+  } else {
+    throw new PreconditionFailed('`apiKey` or `publicAPIKey` configuration is required.');
+  }
+}
+
 var Connection = function () {
   function Connection(_ref) {
     var url = _ref.url,
         apiKey = _ref.apiKey,
         params = _ref.params,
+        authInterceptor$$1 = _ref.authInterceptor,
         onUploadProgress = _ref.onUploadProgress,
         onDownloadProgress = _ref.onDownloadProgress;
     classCallCheck(this, Connection);
@@ -218,6 +396,10 @@ var Connection = function () {
     this.httpClient.interceptors.response.use(function (response) {
       return response;
     }, this.errorInterceptor);
+
+    if (authInterceptor$$1 != null) {
+      this.httpClient.interceptors.request.use(authInterceptor$$1.interceptRequest);
+    }
   }
 
   createClass(Connection, [{
@@ -257,6 +439,21 @@ var Connection = function () {
         rawResponse: err.response.data,
         statusCode: err.response.status
       }));
+    }
+  }], [{
+    key: 'build',
+    value: function build(needAuth, config) {
+      var params = config.params || {};
+      if ((config.timeout || 0) > 0) {
+        params.timeout = config.timeout;
+      }
+      return new Connection({
+        params: params,
+        authInterceptor: needAuth ? authInterceptor(config) : null,
+        url: config.url + config.version,
+        onUploadProgress: config.onUploadProgress,
+        onDownloadProgress: config.onDownloadProgress
+      });
     }
   }]);
   return Connection;
@@ -359,14 +556,6 @@ function poll(config) {
   });
 }
 
-function sanitizeAPIKey(key) {
-  if (typeof key !== 'string') {
-    return null;
-  }
-  key = key.replace(/^\s*/, '').replace(/\s*$/, '');
-  return key === '' ? null : key;
-}
-
 function getTimeoutLength() {
   var timeout = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
   var timeoutMaxAllowed = arguments[1];
@@ -457,27 +646,8 @@ var Client = function () {
     }
   }, {
     key: 'connection',
-    value: function connection(useAPIKey, options) {
-      return new Connection(this.connectionConfig(useAPIKey, options));
-    }
-  }, {
-    key: 'connectionConfig',
-    value: function connectionConfig(useAPIKey, options) {
-      var config = Object.assign({}, this.config, options);
-      var apiKey = sanitizeAPIKey(config.apiKey);
-      if (useAPIKey && apiKey == null) {
-        throw new PreconditionFailed('`apiKey` configuration is required.');
-      }
-      var params = options.params || {};
-      if ((config.timeout || 0) > 0) {
-        params.timeout = config.timeout;
-      }
-      return {
-        apiKey: apiKey, params: params,
-        url: config.url + config.version,
-        onUploadProgress: config.onUploadProgress,
-        onDownloadProgress: config.onDownloadProgress
-      };
+    value: function connection(needAuth, options) {
+      return Connection.build(needAuth, Object.assign({}, this.config, options));
     }
   }]);
   return Client;
@@ -490,7 +660,11 @@ function client(options) {
 var index = Object.assign(client, {
   Client: Client,
   Connection: Connection,
-  Recognition: Recognition
-}, errors);
+  Recognition: Recognition,
+  PrivateKeyAuthInterceptor: PrivateKeyAuthInterceptor,
+  PublicKeyAuthInterceptor: PublicKeyAuthInterceptor,
+  authInterceptor: authInterceptor,
+  OneTimeTokenProvider: OneTimeTokenProvider
+}, token, errors);
 
 export default index;

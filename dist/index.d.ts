@@ -4,6 +4,7 @@ export declare namespace Scnnr {
     version?: string
     timeout?: number
     apiKey?: string
+    publicAPIKey?: string
     onDownloadProgress?: (event: ProgressEvent) => void
     onUploadProgress?: (event: ProgressEvent) => void
   }

@@ -20,14 +20,36 @@ describe('Connection', () => {
     url: 'https://dummy.scnnr.cubki.jp/v1',
     apiKey: 'dummy_key',
   }
-  const connection = new scnnr.Connection(config)
   const responseBody = { data: 'dummy_data' }
+
+  function getConnection(cfg = config) { return new scnnr.Connection(cfg) }
+
+  describe('constructor', () => {
+    const requestPath = '/recognitions/some/recognition-id'
+
+    context('when an authInterceptor is passed', () => {
+      const authInterceptor = scnnr.authInterceptor(config)
+
+      it('registers it for requests', () => {
+        const connection = getConnection(Object.assign({ authInterceptor }, config))
+        expect(connection.httpClient.interceptors.request.handlers.length).to.equal(1)
+        expect(connection.httpClient.interceptors.request.handlers[0].fulfilled)
+          .to.equal(authInterceptor.interceptRequest)
+      })
+    })
+
+    context('when no authInterceptor is passed', () => {
+      it('does not register any interceptor for requests', () => {
+        expect(getConnection().httpClient.interceptors.request.handlers).is.empty
+      })
+    })
+  })
 
   const behavesLikeGenericRequest = (method, requestPath, sendRequest) => {
     it('resolves with response', () => {
       nock(config.url, { reqheaders: { 'x-api-key': config.apiKey } })[method](requestPath).reply(200, responseBody)
 
-      return sendRequest(connection)
+      return sendRequest(getConnection())
         .then(result => {
           expect(result.status).to.equal(200)
           expect(result.data).to.deep.equal(responseBody)
@@ -40,7 +62,7 @@ describe('Connection', () => {
       nock(config.url, { reqheaders: { 'Content-Type': contentType } })[method](requestPath)
         .reply(200)
 
-      return sendRequest(connection)
+      return sendRequest(getConnection())
     })
   }
 
@@ -60,7 +82,7 @@ describe('Connection', () => {
       nock(config.url, { reqheaders: { 'x-api-key': config.apiKey } })
         .post(requestPath)
         .reply(200)
-      return sendRequest(connection)
+      return sendRequest(getConnection())
     })
   }
 
@@ -69,7 +91,7 @@ describe('Connection', () => {
       let onProgress
       const onProgressPromise = new Promise((resolve) => { onProgress = event => resolve(event) })
 
-      const connection = new scnnr.Connection(Object.assign({
+      const connection = getConnection(Object.assign({
         [`on${type}Progress`]: onProgress,
       }, config))
       connection.httpClient.defaults.adapter = require('axios/lib/adapters/xhr')
@@ -158,7 +180,7 @@ describe('Connection', () => {
             .intercept(requestPath, method)
             .reply(testCase.mockResponse.status, testCase.mockResponse.body)
 
-          return sendRequest(connection)
+          return sendRequest(getConnection())
             .catch(err => {
               expect(err.name).to.be.equal('ScnnrAPIError')
               expect(err.message).to.be.equal(testCase.expectations.errorMessage)
@@ -198,7 +220,7 @@ describe('Connection', () => {
     it('sends json body', () => {
       nock(config.url).post(requestPath, requestBody).reply(200)
 
-      return sendRequest(connection)
+      return sendRequest(getConnection())
     })
   })
 
@@ -221,7 +243,7 @@ describe('Connection', () => {
         .post(requestPath)
         .reply(200, (uri, body) => { expect(body).to.equal(requestBody.toString('hex')) })
 
-      return sendRequest(connection)
+      return sendRequest(getConnection())
     })
   })
 })
