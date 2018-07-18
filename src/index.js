@@ -2,6 +2,7 @@ import Client from './Client'
 import Connection from './Connection'
 import Recognition from './Recognition'
 import authInterceptor, { PrivateKeyAuthInterceptor, PublicKeyAuthInterceptor } from './authInterceptor'
+import * as token from './token'
 import OneTimeTokenProvider from './OneTimeTokenProvider'
 import * as errors from './errors'
 
@@ -15,4 +16,4 @@ export default Object.assign(client, {
   PublicKeyAuthInterceptor,
   authInterceptor,
   OneTimeTokenProvider,
-}, errors)
+}, token, errors)

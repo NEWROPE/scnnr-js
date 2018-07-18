@@ -635,6 +635,42 @@ var Client = function () {
   return Client;
 }();
 
+var OneTimeToken = function () {
+  function OneTimeToken(value, expiresAt) {
+    classCallCheck(this, OneTimeToken);
+
+    this.value = value;
+    this.expiresAt = expiresAt;
+  }
+
+  createClass(OneTimeToken, [{
+    key: "hasExpired",
+    value: function hasExpired() {
+      var margin = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+      return Date.now() >= this.expiresAt.getTime() - margin;
+    }
+  }]);
+  return OneTimeToken;
+}();
+
+function buildToken(data) {
+  switch (data.type) {
+    case 'one-time':
+      return new OneTimeToken(data.value, calculateExpiration(data.expires_in));
+    default:
+      return null;
+  }
+}
+
+function calculateExpiration(seconds) {
+  return new Date(Date.now() + seconds * 1000);
+}
+
+var token = Object.freeze({
+	OneTimeToken: OneTimeToken,
+	buildToken: buildToken
+});
+
 function client(options) {
   return new Client(options);
 }
@@ -647,6 +683,6 @@ var index = Object.assign(client, {
   PublicKeyAuthInterceptor: PublicKeyAuthInterceptor,
   authInterceptor: authInterceptor,
   OneTimeTokenProvider: OneTimeTokenProvider
-}, errors);
+}, token, errors);
 
 module.exports = index;
