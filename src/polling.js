@@ -14,15 +14,15 @@ function poll(config) {
         if (conditionChecker(result)) {
           return resolve(result)
         }
-        
+
         const newRemainingTime = remainingTime - timeout
 
-        const newConfig = { 
-          requestFunc, 
-          conditionChecker, 
-          remainingTime: newRemainingTime, 
+        const newConfig = {
+          requestFunc,
+          conditionChecker,
+          remainingTime: newRemainingTime,
         }
-        
+
         return resolve(poll.call(this, newConfig))
       })
   })
