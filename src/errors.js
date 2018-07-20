@@ -29,15 +29,14 @@ function buildMessage(title, detail, type) {
   if (title) {
     message = `[${title}]`
   }
-  
+
   if (detail) {
     message = `${message} ${detail}`
   }
-  
+
   if (type) {
     message = `${message} (${type})`
   }
-  
 
   return message
 }
