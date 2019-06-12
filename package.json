@@ -9,6 +9,7 @@
     "start": "rollup -c -w",
     "build": "yarn lint && rollup -c && yarn test",
     "test": "mocha --require babel-core/register test/setup.js 'test/**/*.js'",
+    "citest": "mocha --require babel-core/register test/setup.js 'test/**/*.js' --reporter mocha-junit-reporter",
     "test:watch": "yarn test -- --watch",
     "lint": "eslint 'src/**/*.js' 'test/**/*.js'",
     "lint:watch": "chokidar 'src/**/*.js' 'test/**/*.js' -c 'yarn lint && echo \"\\033[0;32mReadable codes!\\033[0;0m\"'"
@@ -34,6 +35,7 @@
     "eslint": "^4.11.0",
     "eslint-plugin-mocha": "^4.11.0",
     "mocha": "^4.0.1",
+    "mocha-junit-reporter": "^1.23.0",
     "nock": "^10.0.6",
     "rollup": "^0.51.5",
     "rollup-plugin-babel": "^3.0.2",
