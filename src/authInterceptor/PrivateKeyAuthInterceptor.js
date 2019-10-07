@@ -7,7 +7,7 @@ export default class PrivateKeyAuthInterceptor extends AuthInterceptor {
   }
 
   interceptRequest(config) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       config.headers['x-api-key'] = this.apiKey
       resolve(config)
     })

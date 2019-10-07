@@ -1,4 +1,3 @@
-import Connection from '../Connection'
 import OneTimeTokenProvider from '../OneTimeTokenProvider'
 import AuthInterceptor from './AuthInterceptor'
 
