@@ -1,5 +1,3 @@
-import nock from 'nock'
-import sinon from 'sinon'
 import { expect } from 'chai'
 
 import scnnr from '../../dist/scnnr.esm'

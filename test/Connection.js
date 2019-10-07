@@ -1,7 +1,6 @@
 import nock from 'nock'
 import fs from 'fs'
 import path from 'path'
-import { Buffer } from 'buffer'
 import { expect } from 'chai'
 import XHRMock from 'xhr-mock'
 
@@ -25,8 +24,6 @@ describe('Connection', () => {
   function getConnection(cfg = config) { return new scnnr.Connection(cfg) }
 
   describe('constructor', () => {
-    const requestPath = '/recognitions/some/recognition-id'
-
     context('when an authInterceptor is passed', () => {
       const authInterceptor = scnnr.authInterceptor(config)
 

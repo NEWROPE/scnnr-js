@@ -105,7 +105,7 @@ describe('Client', () => {
         .query({ timeout: 2 })
         .reply(200, queuedRecognition)
 
-      const pollMocks = nock(config.url)
+      nock(config.url)
         // Polling requests
         .get(`/${client.config.version}/recognitions/${queuedRecognition.id}`)
         .query({ timeout: 2 })
