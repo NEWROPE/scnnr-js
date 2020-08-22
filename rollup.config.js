@@ -1,15 +1,15 @@
-import resolve from 'rollup-plugin-node-resolve'
-import commonjs from 'rollup-plugin-commonjs'
-import babel from 'rollup-plugin-babel'
-import uglify from 'rollup-plugin-uglify'
-import json from 'rollup-plugin-json'
-import eslint from 'rollup-plugin-eslint'
+import resolve from '@rollup/plugin-node-resolve'
+import commonjs from '@rollup/plugin-commonjs'
+import babel from '@rollup/plugin-babel'
+import { uglify } from 'rollup-plugin-uglify'
+import json from '@rollup/plugin-json'
+import { eslint } from 'rollup-plugin-eslint'
 
 import pkg from './package.json'
 
 const input = 'src/index.js'
 
-const plugins = [
+const plugins = (mode) => [
   resolve({
     browser: true,
   }),
@@ -17,16 +17,17 @@ const plugins = [
   commonjs(),
   babel({
     babelrc: false,
+    babelHelpers: mode === 'browser' ? 'bundled' : 'runtime',
     presets: [
       [
-        'env',
+        '@babel/preset-env',
         {
           'modules': false
         },
       ],
     ],
-    plugins: ['external-helpers'],
-    exclude: 'node_modules/**'
+    plugins: mode === 'browser' ? [] : ['@babel/plugin-transform-runtime'],
+    exclude: 'node_modules/**',
   }),
 ]
 var config = [
@@ -34,15 +35,16 @@ var config = [
   {
     input: input,
     output: {
+      name: pkg.name,
       file: pkg.main,
-      format: 'umd'
+      format: 'umd',
+      exports: 'auto',
     },
-    name: pkg.name,
-    plugins: plugins.concat([
+    plugins: plugins('browser').concat([
       uglify({
+        warnings: true,
         compress: {
           pure_getters: true,
-          warnings: true,
         }
       }),
     ]),
@@ -56,13 +58,12 @@ var config = [
   // `file` and `format` for each target)
   {
     input: input,
-    external: ['axios'],
+    external: ['axios', /@babel\/runtime/],
     output: [
-      { file: pkg.module.replace('.esm', '.cjs'), format: 'cjs' },
-      { file: pkg.module, format: 'es' }
+      { name: pkg.name, file: pkg.module.replace('.esm', '.cjs'), format: 'cjs', exports: 'auto' },
+      { name: pkg.name, file: pkg.module, format: 'es', exports: 'auto' }
     ],
-    name: pkg.name,
-    plugins: plugins.concat([
+    plugins: plugins('node').concat([
       eslint({
         exclude: 'src/**',
       }),
