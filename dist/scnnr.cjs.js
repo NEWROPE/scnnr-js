@@ -1,24 +1,36 @@
 'use strict';
 
-var _classCallCheck = require('@babel/runtime/helpers/classCallCheck');
-var _createClass = require('@babel/runtime/helpers/createClass');
 var axios = require('axios');
-var _assertThisInitialized = require('@babel/runtime/helpers/assertThisInitialized');
-var _inherits = require('@babel/runtime/helpers/inherits');
-var _possibleConstructorReturn = require('@babel/runtime/helpers/possibleConstructorReturn');
-var _getPrototypeOf = require('@babel/runtime/helpers/getPrototypeOf');
-var _wrapNativeSuper = require('@babel/runtime/helpers/wrapNativeSuper');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
-var _classCallCheck__default = /*#__PURE__*/_interopDefaultLegacy(_classCallCheck);
-var _createClass__default = /*#__PURE__*/_interopDefaultLegacy(_createClass);
 var axios__default = /*#__PURE__*/_interopDefaultLegacy(axios);
-var _assertThisInitialized__default = /*#__PURE__*/_interopDefaultLegacy(_assertThisInitialized);
-var _inherits__default = /*#__PURE__*/_interopDefaultLegacy(_inherits);
-var _possibleConstructorReturn__default = /*#__PURE__*/_interopDefaultLegacy(_possibleConstructorReturn);
-var _getPrototypeOf__default = /*#__PURE__*/_interopDefaultLegacy(_getPrototypeOf);
-var _wrapNativeSuper__default = /*#__PURE__*/_interopDefaultLegacy(_wrapNativeSuper);
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+var classCallCheck = _classCallCheck;
+
+function _defineProperties(target, props) {
+  for (var i = 0; i < props.length; i++) {
+    var descriptor = props[i];
+    descriptor.enumerable = descriptor.enumerable || false;
+    descriptor.configurable = true;
+    if ("value" in descriptor) descriptor.writable = true;
+    Object.defineProperty(target, descriptor.key, descriptor);
+  }
+}
+
+function _createClass(Constructor, protoProps, staticProps) {
+  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+  if (staticProps) _defineProperties(Constructor, staticProps);
+  return Constructor;
+}
+
+var createClass = _createClass;
 
 var defaults = {
   url: 'https://api.scnnr.cubki.jp/',
@@ -27,24 +39,199 @@ var defaults = {
   apiKey: null
 };
 
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf__default['default'](Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf__default['default'](this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn__default['default'](this, result); }; }
+function _assertThisInitialized(self) {
+  if (self === void 0) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
 
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+  return self;
+}
+
+var assertThisInitialized = _assertThisInitialized;
+
+function createCommonjsModule(fn, basedir, module) {
+	return module = {
+	  path: basedir,
+	  exports: {},
+	  require: function (path, base) {
+      return commonjsRequire(path, (base === undefined || base === null) ? module.path : base);
+    }
+	}, fn(module, module.exports), module.exports;
+}
+
+function commonjsRequire () {
+	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
+}
+
+var setPrototypeOf = createCommonjsModule(function (module) {
+function _setPrototypeOf(o, p) {
+  module.exports = _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+    o.__proto__ = p;
+    return o;
+  };
+
+  return _setPrototypeOf(o, p);
+}
+
+module.exports = _setPrototypeOf;
+});
+
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function");
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) setPrototypeOf(subClass, superClass);
+}
+
+var inherits = _inherits;
+
+var _typeof_1 = createCommonjsModule(function (module) {
+function _typeof(obj) {
+  "@babel/helpers - typeof";
+
+  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+    module.exports = _typeof = function _typeof(obj) {
+      return typeof obj;
+    };
+  } else {
+    module.exports = _typeof = function _typeof(obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+  }
+
+  return _typeof(obj);
+}
+
+module.exports = _typeof;
+});
+
+function _possibleConstructorReturn(self, call) {
+  if (call && (_typeof_1(call) === "object" || typeof call === "function")) {
+    return call;
+  }
+
+  return assertThisInitialized(self);
+}
+
+var possibleConstructorReturn = _possibleConstructorReturn;
+
+var getPrototypeOf = createCommonjsModule(function (module) {
+function _getPrototypeOf(o) {
+  module.exports = _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+    return o.__proto__ || Object.getPrototypeOf(o);
+  };
+  return _getPrototypeOf(o);
+}
+
+module.exports = _getPrototypeOf;
+});
+
+function _isNativeFunction(fn) {
+  return Function.toString.call(fn).indexOf("[native code]") !== -1;
+}
+
+var isNativeFunction = _isNativeFunction;
+
+function _isNativeReflectConstruct() {
+  if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+  if (Reflect.construct.sham) return false;
+  if (typeof Proxy === "function") return true;
+
+  try {
+    Date.prototype.toString.call(Reflect.construct(Date, [], function () {}));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+var isNativeReflectConstruct = _isNativeReflectConstruct;
+
+var construct = createCommonjsModule(function (module) {
+function _construct(Parent, args, Class) {
+  if (isNativeReflectConstruct()) {
+    module.exports = _construct = Reflect.construct;
+  } else {
+    module.exports = _construct = function _construct(Parent, args, Class) {
+      var a = [null];
+      a.push.apply(a, args);
+      var Constructor = Function.bind.apply(Parent, a);
+      var instance = new Constructor();
+      if (Class) setPrototypeOf(instance, Class.prototype);
+      return instance;
+    };
+  }
+
+  return _construct.apply(null, arguments);
+}
+
+module.exports = _construct;
+});
+
+var wrapNativeSuper = createCommonjsModule(function (module) {
+function _wrapNativeSuper(Class) {
+  var _cache = typeof Map === "function" ? new Map() : undefined;
+
+  module.exports = _wrapNativeSuper = function _wrapNativeSuper(Class) {
+    if (Class === null || !isNativeFunction(Class)) return Class;
+
+    if (typeof Class !== "function") {
+      throw new TypeError("Super expression must either be null or a function");
+    }
+
+    if (typeof _cache !== "undefined") {
+      if (_cache.has(Class)) return _cache.get(Class);
+
+      _cache.set(Class, Wrapper);
+    }
+
+    function Wrapper() {
+      return construct(Class, arguments, getPrototypeOf(this).constructor);
+    }
+
+    Wrapper.prototype = Object.create(Class.prototype, {
+      constructor: {
+        value: Wrapper,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    return setPrototypeOf(Wrapper, Class);
+  };
+
+  return _wrapNativeSuper(Class);
+}
+
+module.exports = _wrapNativeSuper;
+});
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$1(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$1() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
 var ScnnrError = /*#__PURE__*/function (_Error) {
-  _inherits__default['default'](ScnnrError, _Error);
+  inherits(ScnnrError, _Error);
 
   var _super = _createSuper(ScnnrError);
 
   function ScnnrError(message) {
     var _this;
 
-    _classCallCheck__default['default'](this, ScnnrError);
+    classCallCheck(this, ScnnrError);
 
     _this = _super.call(this, message);
 
     if (Error.hasOwnProperty('captureStackTrace')) {
-      Error.captureStackTrace(_assertThisInitialized__default['default'](_this), ScnnrError);
+      Error.captureStackTrace(assertThisInitialized(_this), ScnnrError);
     } else {
       _this.stack = new Error().stack;
     }
@@ -53,16 +240,16 @@ var ScnnrError = /*#__PURE__*/function (_Error) {
   }
 
   return ScnnrError;
-}( /*#__PURE__*/_wrapNativeSuper__default['default'](Error));
+}( /*#__PURE__*/wrapNativeSuper(Error));
 var PollTimeout = /*#__PURE__*/function (_ScnnrError) {
-  _inherits__default['default'](PollTimeout, _ScnnrError);
+  inherits(PollTimeout, _ScnnrError);
 
   var _super2 = _createSuper(PollTimeout);
 
   function PollTimeout(message) {
     var _this2;
 
-    _classCallCheck__default['default'](this, PollTimeout);
+    classCallCheck(this, PollTimeout);
 
     _this2 = _super2.call(this, message);
     _this2.name = 'PollTimeout';
@@ -72,14 +259,14 @@ var PollTimeout = /*#__PURE__*/function (_ScnnrError) {
   return PollTimeout;
 }(ScnnrError);
 var PreconditionFailed = /*#__PURE__*/function (_ScnnrError2) {
-  _inherits__default['default'](PreconditionFailed, _ScnnrError2);
+  inherits(PreconditionFailed, _ScnnrError2);
 
   var _super3 = _createSuper(PreconditionFailed);
 
   function PreconditionFailed(message) {
     var _this3;
 
-    _classCallCheck__default['default'](this, PreconditionFailed);
+    classCallCheck(this, PreconditionFailed);
 
     _this3 = _super3.call(this, message);
     _this3.name = 'PreconditionFailed';
@@ -108,7 +295,7 @@ function buildMessage(title, detail, type) {
 }
 
 var ScnnrAPIError = /*#__PURE__*/function (_ScnnrError3) {
-  _inherits__default['default'](ScnnrAPIError, _ScnnrError3);
+  inherits(ScnnrAPIError, _ScnnrError3);
 
   var _super4 = _createSuper(ScnnrAPIError);
 
@@ -121,12 +308,12 @@ var ScnnrAPIError = /*#__PURE__*/function (_ScnnrError3) {
         statusCode = _ref.statusCode,
         rawResponse = _ref.rawResponse;
 
-    _classCallCheck__default['default'](this, ScnnrAPIError);
+    classCallCheck(this, ScnnrAPIError);
 
     var message = buildMessage(title, detail, type);
     _this4 = _super4.call(this, message);
     _this4.name = 'ScnnrAPIError';
-    Object.assign(_assertThisInitialized__default['default'](_this4), {
+    Object.assign(assertThisInitialized(_this4), {
       title: title,
       detail: detail,
       type: type,
@@ -139,7 +326,7 @@ var ScnnrAPIError = /*#__PURE__*/function (_ScnnrError3) {
   return ScnnrAPIError;
 }(ScnnrError);
 var RecognitionError = /*#__PURE__*/function (_ScnnrError4) {
-  _inherits__default['default'](RecognitionError, _ScnnrError4);
+  inherits(RecognitionError, _ScnnrError4);
 
   var _super5 = _createSuper(RecognitionError);
 
@@ -150,12 +337,12 @@ var RecognitionError = /*#__PURE__*/function (_ScnnrError4) {
         detail = _ref2.detail,
         type = _ref2.type;
 
-    _classCallCheck__default['default'](this, RecognitionError);
+    classCallCheck(this, RecognitionError);
 
     var message = buildMessage(title, detail, type);
     _this5 = _super5.call(this, message);
     _this5.name = 'RecognitionError';
-    Object.assign(_assertThisInitialized__default['default'](_this5), {
+    Object.assign(assertThisInitialized(_this5), {
       title: title,
       detail: detail,
       type: type,
@@ -178,12 +365,12 @@ var errors = /*#__PURE__*/Object.freeze({
 
 var AuthInterceptor = /*#__PURE__*/function () {
   function AuthInterceptor() {
-    _classCallCheck__default['default'](this, AuthInterceptor);
+    classCallCheck(this, AuthInterceptor);
 
     this.interceptRequest = this.interceptRequest.bind(this);
   }
 
-  _createClass__default['default'](AuthInterceptor, [{
+  createClass(AuthInterceptor, [{
     key: "interceptRequest",
     value: function interceptRequest(config) {
       return Promise.resolve(config);
@@ -193,26 +380,26 @@ var AuthInterceptor = /*#__PURE__*/function () {
   return AuthInterceptor;
 }();
 
-function _createSuper$1(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$1(); return function _createSuperInternal() { var Super = _getPrototypeOf__default['default'](Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf__default['default'](this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn__default['default'](this, result); }; }
+function _createSuper$1(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$2(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$1() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$2() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
 var PrivateKeyAuthInterceptor = /*#__PURE__*/function (_AuthInterceptor) {
-  _inherits__default['default'](PrivateKeyAuthInterceptor, _AuthInterceptor);
+  inherits(PrivateKeyAuthInterceptor, _AuthInterceptor);
 
   var _super = _createSuper$1(PrivateKeyAuthInterceptor);
 
   function PrivateKeyAuthInterceptor(apiKey) {
     var _this;
 
-    _classCallCheck__default['default'](this, PrivateKeyAuthInterceptor);
+    classCallCheck(this, PrivateKeyAuthInterceptor);
 
     _this = _super.call(this);
     _this.apiKey = apiKey;
     return _this;
   }
 
-  _createClass__default['default'](PrivateKeyAuthInterceptor, [{
+  createClass(PrivateKeyAuthInterceptor, [{
     key: "interceptRequest",
     value: function interceptRequest(config) {
       var _this2 = this;
@@ -229,14 +416,14 @@ var PrivateKeyAuthInterceptor = /*#__PURE__*/function (_AuthInterceptor) {
 
 var OneTimeToken = /*#__PURE__*/function () {
   function OneTimeToken(value, expiresIn) {
-    _classCallCheck__default['default'](this, OneTimeToken);
+    classCallCheck(this, OneTimeToken);
 
     this.value = value;
     this.expiresIn = expiresIn;
     this.expiresAt = new Date(Date.now() + expiresIn * 1000);
   }
 
-  _createClass__default['default'](OneTimeToken, [{
+  createClass(OneTimeToken, [{
     key: "hasExpired",
     value: function hasExpired() {
       var margin = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
@@ -265,7 +452,7 @@ var token = /*#__PURE__*/Object.freeze({
 
 var OneTimeTokenProvider = /*#__PURE__*/function () {
   function OneTimeTokenProvider(publicAPIKey, options) {
-    _classCallCheck__default['default'](this, OneTimeTokenProvider);
+    classCallCheck(this, OneTimeTokenProvider);
 
     this.publicAPIKey = publicAPIKey;
     this.options = options;
@@ -274,7 +461,7 @@ var OneTimeTokenProvider = /*#__PURE__*/function () {
     this.marginToExpire = 0.05; // a margin to prevent unexpected expiration (5% of the time)
   }
 
-  _createClass__default['default'](OneTimeTokenProvider, [{
+  createClass(OneTimeTokenProvider, [{
     key: "get",
     value: function get() {
       var _this = this;
@@ -328,26 +515,26 @@ var OneTimeTokenProvider = /*#__PURE__*/function () {
   return OneTimeTokenProvider;
 }();
 
-function _createSuper$2(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$2(); return function _createSuperInternal() { var Super = _getPrototypeOf__default['default'](Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf__default['default'](this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn__default['default'](this, result); }; }
+function _createSuper$2(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$3(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct$2() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct$3() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
 var PublicKeyAuthInterceptor = /*#__PURE__*/function (_AuthInterceptor) {
-  _inherits__default['default'](PublicKeyAuthInterceptor, _AuthInterceptor);
+  inherits(PublicKeyAuthInterceptor, _AuthInterceptor);
 
   var _super = _createSuper$2(PublicKeyAuthInterceptor);
 
   function PublicKeyAuthInterceptor(publicAPIKey, options) {
     var _this;
 
-    _classCallCheck__default['default'](this, PublicKeyAuthInterceptor);
+    classCallCheck(this, PublicKeyAuthInterceptor);
 
     _this = _super.call(this);
     _this.oneTimeTokenProvider = new OneTimeTokenProvider(publicAPIKey, options);
     return _this;
   }
 
-  _createClass__default['default'](PublicKeyAuthInterceptor, [{
+  createClass(PublicKeyAuthInterceptor, [{
     key: "interceptRequest",
     value: function interceptRequest(config) {
       return this.oneTimeTokenProvider.get().then(function (token) {
@@ -395,7 +582,7 @@ var Connection = /*#__PURE__*/function () {
         onUploadProgress = _ref.onUploadProgress,
         onDownloadProgress = _ref.onDownloadProgress;
 
-    _classCallCheck__default['default'](this, Connection);
+    classCallCheck(this, Connection);
 
     var headers = {};
 
@@ -419,7 +606,7 @@ var Connection = /*#__PURE__*/function () {
     }
   }
 
-  _createClass__default['default'](Connection, [{
+  createClass(Connection, [{
     key: "get",
     value: function get(path) {
       return this.httpClient.get(path, null);
@@ -484,7 +671,7 @@ var Connection = /*#__PURE__*/function () {
 }();
 
 var Item = function Item(props) {
-  _classCallCheck__default['default'](this, Item);
+  classCallCheck(this, Item);
 
   this.category = props.category;
   this.boundingBox = props.boundingBox || props.bounding_box;
@@ -495,7 +682,7 @@ var Size = function Size(_ref) {
   var width = _ref.width,
       height = _ref.height;
 
-  _classCallCheck__default['default'](this, Size);
+  classCallCheck(this, Size);
 
   this.width = width;
   this.height = height;
@@ -505,7 +692,7 @@ var Image = function Image(_ref) {
   var url = _ref.url,
       size = _ref.size;
 
-  _classCallCheck__default['default'](this, Image);
+  classCallCheck(this, Image);
 
   this.url = url;
   this.size = new Size(size);
@@ -520,7 +707,7 @@ var Recognition = /*#__PURE__*/function () {
         image = _ref.image,
         error = _ref.error;
 
-    _classCallCheck__default['default'](this, Recognition);
+    classCallCheck(this, Recognition);
 
     this.id = id;
     this.objects = (objects || []).map(function (obj) {
@@ -535,7 +722,7 @@ var Recognition = /*#__PURE__*/function () {
     this.error = error;
   }
 
-  _createClass__default['default'](Recognition, [{
+  createClass(Recognition, [{
     key: "isFinished",
     value: function isFinished() {
       return this.state === 'finished';
@@ -590,12 +777,12 @@ function getTimeoutLength() {
 
 var Client = /*#__PURE__*/function () {
   function Client(config) {
-    _classCallCheck__default['default'](this, Client);
+    classCallCheck(this, Client);
 
     this.config = Object.assign({}, defaults, config);
   }
 
-  _createClass__default['default'](Client, [{
+  createClass(Client, [{
     key: "recognizeURL",
     value: function recognizeURL(url) {
       var _this = this;

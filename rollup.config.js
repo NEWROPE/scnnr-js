@@ -58,7 +58,7 @@ var config = [
   // `file` and `format` for each target)
   {
     input: input,
-    external: ['axios', /@babel\/runtime/],
+    external: ['axios'],
     output: [
       { name: pkg.name, file: pkg.module.replace('.esm', '.cjs'), format: 'cjs', exports: 'auto' },
       { name: pkg.name, file: pkg.module, format: 'es', exports: 'auto' }
