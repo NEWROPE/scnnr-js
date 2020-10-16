@@ -36,9 +36,9 @@ var config = [
     input: input,
     output: {
       name: pkg.name,
-      file: pkg.main,
+      file: pkg.browser,
       format: 'umd',
-      exports: 'auto',
+      exports: 'named',
     },
     plugins: plugins('browser').concat([
       uglify({
