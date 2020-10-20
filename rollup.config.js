@@ -1,15 +1,15 @@
-import resolve from 'rollup-plugin-node-resolve'
-import commonjs from 'rollup-plugin-commonjs'
-import babel from 'rollup-plugin-babel'
-import uglify from 'rollup-plugin-uglify'
-import json from 'rollup-plugin-json'
-import eslint from 'rollup-plugin-eslint'
+import resolve from '@rollup/plugin-node-resolve'
+import commonjs from '@rollup/plugin-commonjs'
+import babel from '@rollup/plugin-babel'
+import { uglify } from 'rollup-plugin-uglify'
+import json from '@rollup/plugin-json'
+import { eslint } from 'rollup-plugin-eslint'
 
 import pkg from './package.json'
 
 const input = 'src/index.js'
 
-const plugins = [
+const plugins = (bundle) => [
   resolve({
     browser: true,
   }),
@@ -17,16 +17,17 @@ const plugins = [
   commonjs(),
   babel({
     babelrc: false,
+    babelHelpers: bundle ? 'bundled' : 'runtime',
     presets: [
       [
-        'env',
+        '@babel/preset-env',
         {
           'modules': false
         },
       ],
     ],
-    plugins: ['external-helpers'],
-    exclude: 'node_modules/**'
+    plugins: bundle ? [] : ['@babel/plugin-transform-runtime'],
+    exclude: 'node_modules/**',
   }),
 ]
 var config = [
@@ -34,23 +35,36 @@ var config = [
   {
     input: input,
     output: {
+      name: pkg.name,
       file: pkg.main,
-      format: 'umd'
+      format: 'umd',
+      exports: 'default',
     },
-    name: pkg.name,
-    plugins: plugins.concat([
+    plugins: plugins(true).concat([
       uglify({
+        warnings: true,
         compress: {
           pure_getters: true,
-          warnings: true,
         }
       }),
     ]),
   },
 
+  // browser-friendly ES module build
+  {
+    input: input,
+    output: {
+      name: pkg.name,
+      file: pkg.main.replace('umd', 'esm'),
+      format: 'es',
+      exports: 'named',
+    },
+    plugins: plugins(true), // TODO: minifying
+  },
+
   // CommonJS (for Node) and ES module (for bundlers) build.
-  // (We could have three entries in the configuration array
-  // instead of two, but it's quicker to generate multiple
+  // (We could have four entries in the configuration array
+  // instead of three, but it's quicker to generate multiple
   // builds from a single configuration where possible, using
   // an array for the `output` option, where we can specify
   // `file` and `format` for each target)
@@ -58,11 +72,10 @@ var config = [
     input: input,
     external: ['axios'],
     output: [
-      { file: pkg.module.replace('.esm', '.cjs'), format: 'cjs' },
-      { file: pkg.module, format: 'es' }
+      { name: pkg.name, file: pkg.module.replace('.esm', '.cjs'), format: 'cjs', exports: 'default' },
+      { name: pkg.name, file: pkg.module, format: 'es', exports: 'named' },
     ],
-    name: pkg.name,
-    plugins: plugins.concat([
+    plugins: plugins(false).concat([
       eslint({
         exclude: 'src/**',
       }),
