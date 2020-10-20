@@ -9,7 +9,7 @@ import pkg from './package.json'
 
 const input = 'src/index.js'
 
-const plugins = (mode) => [
+const plugins = (bundle) => [
   resolve({
     browser: true,
   }),
@@ -17,7 +17,7 @@ const plugins = (mode) => [
   commonjs(),
   babel({
     babelrc: false,
-    babelHelpers: mode === 'browser' ? 'bundled' : 'runtime',
+    babelHelpers: bundle ? 'bundled' : 'runtime',
     presets: [
       [
         '@babel/preset-env',
@@ -26,7 +26,7 @@ const plugins = (mode) => [
         },
       ],
     ],
-    plugins: mode === 'browser' ? [] : ['@babel/plugin-transform-runtime'],
+    plugins: bundle ? [] : ['@babel/plugin-transform-runtime'],
     exclude: 'node_modules/**',
   }),
 ]
@@ -36,11 +36,11 @@ var config = [
     input: input,
     output: {
       name: pkg.name,
-      file: pkg.browser,
+      file: pkg.main,
       format: 'umd',
-      exports: 'named',
+      exports: 'default',
     },
-    plugins: plugins('browser').concat([
+    plugins: plugins(true).concat([
       uglify({
         warnings: true,
         compress: {
@@ -50,9 +50,21 @@ var config = [
     ]),
   },
 
+  // browser-friendly ES module build
+  {
+    input: input,
+    output: {
+      name: pkg.name,
+      file: pkg.main.replace('umd', 'esm'),
+      format: 'es',
+      exports: 'named',
+    },
+    plugins: plugins(true), // TODO: minifying
+  },
+
   // CommonJS (for Node) and ES module (for bundlers) build.
-  // (We could have three entries in the configuration array
-  // instead of two, but it's quicker to generate multiple
+  // (We could have four entries in the configuration array
+  // instead of three, but it's quicker to generate multiple
   // builds from a single configuration where possible, using
   // an array for the `output` option, where we can specify
   // `file` and `format` for each target)
@@ -60,10 +72,10 @@ var config = [
     input: input,
     external: ['axios'],
     output: [
-      { name: pkg.name, file: pkg.module.replace('.esm', '.cjs'), format: 'cjs', exports: 'auto' },
-      { name: pkg.name, file: pkg.module, format: 'es', exports: 'auto' }
+      { name: pkg.name, file: pkg.module.replace('.esm', '.cjs'), format: 'cjs', exports: 'default' },
+      { name: pkg.name, file: pkg.module, format: 'es', exports: 'named' },
     ],
-    plugins: plugins('node').concat([
+    plugins: plugins(false).concat([
       eslint({
         exclude: 'src/**',
       }),

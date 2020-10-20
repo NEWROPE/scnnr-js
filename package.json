@@ -2,8 +2,7 @@
   "name": "scnnr",
   "version": "1.0.1",
   "description": "Official #CBK scnnr client library for JavaScript",
-  "browser": "dist/scnnr.umd.js",
-  "main": "dist/scnnr.cjs.js",
+  "main": "dist/scnnr.bundle.umd.js",
   "module": "dist/scnnr.esm.js",
   "types": "dist/index.d.ts",
   "scripts": {
