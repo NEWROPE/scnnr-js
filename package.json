@@ -45,7 +45,7 @@
     "nock": "^10.0.6",
     "rollup": "^2.26.4",
     "rollup-plugin-eslint": "^7.0.0",
-    "rollup-plugin-uglify": "^6.0.4",
+    "rollup-plugin-terser": "^7.0.2",
     "sinon": "^9.0.3",
     "xhr-mock": "^2.4.0"
   },
