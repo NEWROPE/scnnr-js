@@ -50,7 +50,7 @@
     "xhr-mock": "^2.4.0"
   },
   "dependencies": {
-    "axios": "^0.18.1"
+    "axios": "^0.21.1"
   },
   "resolutions": {
     "**/lodash": "^4.17.13"
