@@ -4386,9 +4386,9 @@ write@^0.2.1:
     mkdirp "^0.5.1"
 
 xhr-mock@^2.4.0:
-  version "2.4.1"
-  resolved "https://registry.yarnpkg.com/xhr-mock/-/xhr-mock-2.4.1.tgz#cb502e3d50b8b2ec31bd61766ce516bfc1dd072f"
-  integrity sha1-y1AuPVC4suwxvWF2bOUWv8HdBy8=
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/xhr-mock/-/xhr-mock-2.5.1.tgz#c591498a8269cc1ce5fefac20d590357affd348b"
+  integrity sha512-UKOjItqjFgPUwQGPmRAzNBn8eTfIhcGjBVGvKYAWxUQPQsXNGD6KEckGTiHwyaAUp9C9igQlnN1Mp79KWCg7CQ==
   dependencies:
     global "^4.3.0"
     url "^0.11.0"
