@@ -2,7 +2,6 @@ import nock from 'nock'
 import fs from 'fs'
 import path from 'path'
 import { expect } from 'chai'
-import XHRMock from 'xhr-mock'
 
 import forbiddenErrorResponse from './fixtures/errors/forbidden_error.json'
 import notFoundErrorResponse from './fixtures/errors/not_found_error.json'
@@ -18,6 +17,8 @@ describe('Connection', () => {
   const config = {
     url: 'https://dummy.scnnr.cubki.jp/v1',
     apiKey: 'dummy_key',
+    onUploadProgress: () => {},
+    onDownloadProgress: () => {},
   }
   const responseBody = { data: 'dummy_data' }
 
@@ -32,6 +33,8 @@ describe('Connection', () => {
         expect(connection.httpClient.interceptors.request.handlers.length).to.equal(1)
         expect(connection.httpClient.interceptors.request.handlers[0].fulfilled)
           .to.equal(authInterceptor.interceptRequest)
+        expect(connection.httpClient.defaults.onUploadProgress).to.equal(config.onUploadProgress)
+        expect(connection.httpClient.defaults.onDownloadProgress).to.equal(config.onDownloadProgress)
       })
     })
 
@@ -80,30 +83,6 @@ describe('Connection', () => {
         .post(requestPath)
         .reply(200)
       return sendRequest(getConnection())
-    })
-  }
-
-  const behavesLikeRequestWithProgress = (type, method, requestPath, sendRequest) => {
-    describe('on a browser environment', () => {
-      let onProgress
-      const onProgressPromise = new Promise((resolve) => { onProgress = event => resolve(event) })
-
-      const connection = getConnection(Object.assign({
-        [`on${type}Progress`]: onProgress,
-      }, config))
-      connection.httpClient.defaults.adapter = require('axios/lib/adapters/xhr')
-
-      beforeEach(() => {
-        XHRMock.setup()
-        XHRMock[method](config.url + requestPath, (req, res) => res.status(200).body(responseBody))
-      })
-      afterEach(() => { XHRMock.teardown() })
-
-      it(`can be work with on${type}Progress callback`, () => {
-        return sendRequest(connection)
-          .then(() => onProgressPromise)
-          .then((event) => expect(event.type).to.equal('progress'))
-      })
     })
   }
 
@@ -197,7 +176,6 @@ describe('Connection', () => {
 
     behavesLikeGenericRequest('get', requestPath, sendRequest)
     behavesLikeTimeoutableRequest('get', requestPath, sendRequest)
-    behavesLikeRequestWithProgress('Download', 'get', requestPath, sendRequest)
     handlesErrors('get', requestPath, sendRequest)
   })
 
@@ -210,8 +188,6 @@ describe('Connection', () => {
     behavesLikeRequestWithBody('post', requestPath, 'application/json', sendRequest)
     behavesLikeTimeoutableRequest('post', requestPath, sendRequest)
     behavesLikeRequestWithAPIKey(requestPath, sendRequest)
-    behavesLikeRequestWithProgress('Download', 'post', requestPath, sendRequest)
-    behavesLikeRequestWithProgress('Upload', 'post', requestPath, sendRequest)
     handlesErrors('post', requestPath, sendRequest)
 
     it('sends json body', () => {
@@ -230,9 +206,6 @@ describe('Connection', () => {
     behavesLikeRequestWithBody('post', requestPath, 'application/octet-stream', sendRequest)
     behavesLikeTimeoutableRequest('post', requestPath, sendRequest)
     behavesLikeRequestWithAPIKey(requestPath, sendRequest)
-    // TODO: Upgrade xhr-mock and fix these tests
-    // behavesLikeRequestWithProgress('Download', 'post', requestPath, sendRequest)
-    // behavesLikeRequestWithProgress('Upload', 'post', requestPath, sendRequest)
     handlesErrors('post', requestPath, sendRequest)
 
     it('sends binary-data', () => {
